@@ -2,9 +2,6 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { User, Mail, Lock } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { signInWithEmail, signUpWithEmail } from '@/lib/firebase';
 
 interface AuthModalProps {
@@ -13,61 +10,79 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || (isSignUp && !name)) {
-      toast({
-        title: "Missing information",
-        description: isSignUp ? "Please fill in all fields" : "Please enter email and password",
-        variant: "destructive"
-      });
+    
+    if (!email || !password) {
+      setMessage("Please enter email and password");
+      return;
+    }
+
+    if (isSignUp && !name) {
+      setMessage("Please enter your name");
       return;
     }
 
     setIsLoading(true);
+    setMessage('');
+    
     try {
       if (isSignUp) {
         await signUpWithEmail(email, password, name);
-        toast({
-          title: "Account created!",
-          description: "Welcome to PlantShop Rwanda"
-        });
+        setMessage("Account created successfully!");
+        setTimeout(() => {
+          onClose();
+          resetForm();
+        }, 1500);
       } else {
         await signInWithEmail(email, password);
-        toast({
-          title: "Welcome back!",
-          description: "You have been signed in successfully"
-        });
+        setMessage("Signed in successfully!");
+        setTimeout(() => {
+          onClose();
+          resetForm();
+        }, 1500);
+      }
+    } catch (error: any) {
+      console.error('Auth error:', error);
+      let errorMessage = "Something went wrong. Please try again.";
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "Email already in use. Try signing in instead.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "Password should be at least 6 characters.";
+      } else if (error.code === 'auth/user-not-found') {
+        errorMessage = "No account found with this email.";
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "Incorrect password.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Invalid email address.";
       }
       
-      onClose();
-      setEmail('');
-      setPassword('');
-      setName('');
-    } catch (error: any) {
-      console.error('Auth failed:', error);
-      toast({
-        title: isSignUp ? "Sign up failed" : "Sign in failed",
-        description: error.message || "Please try again",
-        variant: "destructive"
-      });
+      setMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setName('');
+    setMessage('');
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-forest-800 text-center">
+          <DialogTitle className="text-2xl font-bold text-center">
             {isSignUp ? 'Create Account' : 'Sign In'}
           </DialogTitle>
         </DialogHeader>
@@ -75,58 +90,56 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
+              <label htmlFor="name" className="text-sm font-medium">Name</label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </div>
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10"
-                required
-              />
-            </div>
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10"
-                required
-                minLength={6}
-              />
-            </div>
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Enter your password (min 6 characters)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
           </div>
+
+          {message && (
+            <div className={`p-3 rounded-md text-sm ${
+              message.includes('successfully') 
+                ? 'bg-green-50 text-green-700 border border-green-200' 
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {message}
+            </div>
+          )}
           
           <Button 
             type="submit" 
-            className="w-full bg-forest-600 hover:bg-forest-700"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md disabled:opacity-50"
             disabled={isLoading}
           >
             {isLoading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
@@ -137,8 +150,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}
           <button
             type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="ml-1 text-forest-600 hover:text-forest-700 font-medium"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setMessage('');
+            }}
+            className="ml-1 text-blue-600 hover:text-blue-700 font-medium"
           >
             {isSignUp ? 'Sign In' : 'Sign Up'}
           </button>
