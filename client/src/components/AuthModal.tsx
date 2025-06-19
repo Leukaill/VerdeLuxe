@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { signInWithEmail, signUpWithEmail } from '@/lib/firebase';
+import { localAuth } from '@/lib/localAuth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -38,7 +38,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       
       if (isSignUp) {
         console.log('Creating new account...');
-        const result = await signUpWithEmail(email, password, name);
+        const result = await localAuth.signUp(email, password, name);
         console.log('Account created successfully:', result);
         setMessage("Account created successfully!");
         setTimeout(() => {
@@ -47,7 +47,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         }, 1500);
       } else {
         console.log('Signing in...');
-        const result = await signInWithEmail(email, password);
+        const result = await localAuth.signIn(email, password);
         console.log('Signed in successfully:', result);
         setMessage("Signed in successfully!");
         setTimeout(() => {

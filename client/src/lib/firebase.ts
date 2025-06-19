@@ -4,13 +4,13 @@ import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, delet
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAqxMS295v7XBtFrwZKtrEgb_b_hxzy77Q",
-  authDomain: "mydb-47035.firebaseapp.com",
-  projectId: "mydb-47035",
-  storageBucket: "mydb-47035.firebasestorage.app",
-  messagingSenderId: "816767003162",
-  appId: "1:816767003162:web:8530107cd5baadc9167fa3",
-  measurementId: "G-QRH3R4MTEC"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAqxMS295v7XBtFrwZKtrEgb_b_hxzy77Q",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "mydb-47035.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "mydb-47035",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "mydb-47035.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "816767003162",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:816767003162:web:8530107cd5baadc9167fa3",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-QRH3R4MTEC"
 };
 
 const app = initializeApp(firebaseConfig);
