@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -41,6 +41,34 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const logout = () => signOut(auth);
+
+// Social Auth Providers
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+
+// Google Sign In
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    await createUserDocument(result.user);
+    return result;
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    throw error;
+  }
+};
+
+// GitHub Sign In
+export const signInWithGitHub = async () => {
+  try {
+    const result = await signInWithPopup(auth, githubProvider);
+    await createUserDocument(result.user);
+    return result;
+  } catch (error) {
+    console.error('GitHub sign in error:', error);
+    throw error;
+  }
+};
 
 // User functions
 export const createUserDocument = async (user: User, displayName?: string) => {
