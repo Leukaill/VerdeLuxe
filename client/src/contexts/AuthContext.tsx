@@ -1,11 +1,18 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User } from 'firebase/auth';
-import { onAuthStateChange, signInWithGoogle, logout, createUserDocument } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+interface SimpleUser {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: SimpleUser | null;
   loading: boolean;
-  signIn: () => Promise<void>;
+  signIn: (email: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -24,24 +31,61 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SimpleUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChange(async (user) => {
-      if (user) {
-        await createUserDocument(user);
+    // Check for stored user in localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('user');
       }
-      setUser(user);
-      setLoading(false);
-    });
-
-    return unsubscribe;
+    }
+    setLoading(false);
   }, []);
 
-  const signIn = async () => {
+  const signIn = async (email: string, name: string) => {
     try {
-      await signInWithGoogle();
+      // Check if user already exists
+      const usersQuery = query(
+        collection(db, 'users'),
+        where('email', '==', email.toLowerCase())
+      );
+      const existingUsers = await getDocs(usersQuery);
+      
+      let userData: SimpleUser;
+      
+      if (!existingUsers.empty) {
+        // User exists, sign them in
+        const existingUser = existingUsers.docs[0];
+        userData = {
+          id: existingUser.id,
+          email: existingUser.data().email,
+          name: existingUser.data().name,
+          createdAt: existingUser.data().createdAt
+        };
+      } else {
+        // Create new user
+        const docRef = await addDoc(collection(db, 'users'), {
+          email: email.toLowerCase(),
+          name: name.trim(),
+          createdAt: new Date().toISOString()
+        });
+        
+        userData = {
+          id: docRef.id,
+          email: email.toLowerCase(),
+          name: name.trim(),
+          createdAt: new Date().toISOString()
+        };
+      }
+      
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
       console.error('Sign in failed:', error);
       throw error;
@@ -50,7 +94,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
-      await logout();
+      setUser(null);
+      localStorage.removeItem('user');
     } catch (error) {
       console.error('Sign out failed:', error);
       throw error;

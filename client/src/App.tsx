@@ -15,6 +15,10 @@ import Profile from "@/pages/Profile";
 import Admin from "@/pages/Admin";
 import ThreeDStudio from "@/pages/ThreeDStudio";
 import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Collab from "@/pages/Collab";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +34,10 @@ function Router() {
         <Route path="/admin" component={Admin} />
         <Route path="/3d-studio" component={ThreeDStudio} />
         <Route path="/about" component={About} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/collab" component={Collab} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/terms-of-service" component={TermsOfService} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

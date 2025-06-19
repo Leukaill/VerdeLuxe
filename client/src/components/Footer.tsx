@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -26,11 +24,15 @@ const Footer = () => {
 
     setIsSubscribing(true);
     try {
-      await addDoc(collection(db, 'newsletter_subscribers'), {
+      // Simple storage without Firebase dependency - just store locally for demo
+      const subscribers = JSON.parse(localStorage.getItem('newsletter_subscribers') || '[]');
+      const newSubscriber = {
         email: email.trim().toLowerCase(),
         subscribedAt: new Date().toISOString(),
         isActive: true
-      });
+      };
+      subscribers.push(newSubscriber);
+      localStorage.setItem('newsletter_subscribers', JSON.stringify(subscribers));
       
       toast({
         title: "Successfully subscribed!",
@@ -140,8 +142,12 @@ const Footer = () => {
         <div className="border-t border-white/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-300">&copy; 2024 Verde Luxe. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-300 hover:text-gold-400 transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-300 hover:text-gold-400 transition-colors">Terms of Service</a>
+            <Link href="/privacy-policy" className="text-gray-300 hover:text-gold-400 transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms-of-service" className="text-gray-300 hover:text-gold-400 transition-colors">
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>

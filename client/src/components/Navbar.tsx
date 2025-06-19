@@ -17,9 +17,11 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const navigation = [
+    { name: 'Home', href: '/' },
     { name: 'Collections', href: '/products' },
-    { name: '3D Studio', href: '/3d-studio' },
     { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' },
+    { name: 'Collab', href: '/collab' },
   ];
 
   const handleSignOut = async () => {
@@ -123,7 +125,7 @@ const Navbar = () => {
                 <div className="flex items-center space-x-2">
                   <Link href="/profile">
                     <Button variant="ghost" className="text-forest-600">
-                      {user.displayName || 'Profile'}
+                      {user.name || 'Profile'}
                     </Button>
                   </Link>
                   <Button
@@ -196,7 +198,7 @@ const Navbar = () => {
                     <div className="space-y-2">
                       <Link href="/profile">
                         <Button variant="ghost" className="w-full text-forest-600">
-                          {user.displayName || 'Profile'}
+                          {user.name || 'Profile'}
                         </Button>
                       </Link>
                       <Button
