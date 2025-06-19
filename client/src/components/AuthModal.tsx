@@ -34,15 +34,21 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     setMessage('');
     
     try {
+      console.log('Attempting authentication:', { isSignUp, email });
+      
       if (isSignUp) {
-        await signUpWithEmail(email, password, name);
+        console.log('Creating new account...');
+        const result = await signUpWithEmail(email, password, name);
+        console.log('Account created successfully:', result);
         setMessage("Account created successfully!");
         setTimeout(() => {
           onClose();
           resetForm();
         }, 1500);
       } else {
-        await signInWithEmail(email, password);
+        console.log('Signing in...');
+        const result = await signInWithEmail(email, password);
+        console.log('Signed in successfully:', result);
         setMessage("Signed in successfully!");
         setTimeout(() => {
           onClose();
@@ -50,19 +56,29 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         }, 1500);
       }
     } catch (error: any) {
-      console.error('Auth error:', error);
+      console.error('Authentication error details:', {
+        error,
+        code: error?.code,
+        message: error?.message,
+        stack: error?.stack
+      });
+      
       let errorMessage = "Something went wrong. Please try again.";
       
-      if (error.code === 'auth/email-already-in-use') {
+      if (error?.code === 'auth/email-already-in-use') {
         errorMessage = "Email already in use. Try signing in instead.";
-      } else if (error.code === 'auth/weak-password') {
+      } else if (error?.code === 'auth/weak-password') {
         errorMessage = "Password should be at least 6 characters.";
-      } else if (error.code === 'auth/user-not-found') {
+      } else if (error?.code === 'auth/user-not-found') {
         errorMessage = "No account found with this email.";
-      } else if (error.code === 'auth/wrong-password') {
+      } else if (error?.code === 'auth/wrong-password') {
         errorMessage = "Incorrect password.";
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (error?.code === 'auth/invalid-email') {
         errorMessage = "Invalid email address.";
+      } else if (error?.code === 'auth/network-request-failed') {
+        errorMessage = "Network error. Please check your connection.";
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
       
       setMessage(errorMessage);
