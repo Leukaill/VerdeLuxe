@@ -195,7 +195,7 @@ const Products = () => {
 
       {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        {sortedPlants.length === 0 ? (
+        {filteredPlants.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600 text-lg">No plants found matching your criteria.</p>
           </div>
@@ -208,7 +208,7 @@ const Products = () => {
                 : 'grid-cols-1 max-w-4xl mx-auto'
             }`}
           >
-            {sortedPlants.map((plant, index) => (
+            {filteredPlants.map((plant, index) => (
               <motion.div
                 key={plant.id}
                 layout

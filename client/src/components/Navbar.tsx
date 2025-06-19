@@ -19,7 +19,6 @@ const Navbar = () => {
   const navigation = [
     { name: 'Collections', href: '/products' },
     { name: '3D Studio', href: '/3d-studio' },
-    { name: 'Care Guide', href: '/care-guide' },
     { name: 'About', href: '/about' },
   ];
 

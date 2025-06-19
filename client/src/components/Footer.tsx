@@ -1,14 +1,52 @@
+import { useState } from 'react';
 import { Leaf } from 'lucide-react';
 import { FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const Footer = () => {
-  const handleSubscribe = (e: React.FormEvent) => {
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement newsletter subscription
-    alert('Newsletter subscription would be implemented here');
+    if (!email || !email.includes('@')) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      await addDoc(collection(db, 'newsletter_subscribers'), {
+        email: email.trim().toLowerCase(),
+        subscribedAt: new Date().toISOString(),
+        isActive: true
+      });
+      
+      toast({
+        title: "Successfully subscribed!",
+        description: "Thank you for subscribing to our newsletter"
+      });
+      setEmail('');
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      toast({
+        title: "Subscription failed",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   return (
@@ -83,13 +121,17 @@ const Footer = () => {
               <Input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="flex-1 rounded-l-lg bg-white/10 border-white/20 text-white placeholder-gray-400"
+                disabled={isSubscribing}
               />
               <Button
                 type="submit"
                 className="bg-gold-500 hover:bg-gold-600 px-6 rounded-r-lg font-semibold"
+                disabled={isSubscribing}
               >
-                Subscribe
+                {isSubscribing ? 'Subscribing...' : 'Subscribe'}
               </Button>
             </form>
           </div>

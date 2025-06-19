@@ -14,6 +14,7 @@ import Checkout from "@/pages/Checkout";
 import Profile from "@/pages/Profile";
 import Admin from "@/pages/Admin";
 import ThreeDStudio from "@/pages/ThreeDStudio";
+import About from "@/pages/About";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +29,7 @@ function Router() {
         <Route path="/profile" component={Profile} />
         <Route path="/admin" component={Admin} />
         <Route path="/3d-studio" component={ThreeDStudio} />
+        <Route path="/about" component={About} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

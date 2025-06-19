@@ -10,13 +10,14 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getPlantById } from '@/lib/firebase';
+import { samplePlants } from '@/lib/sampleData';
 
 const ProductDetail = () => {
   const [, params] = useRoute('/product/:id');
   const { user } = useAuth();
   const { addItem } = useCart();
   const { toast } = useToast();
-  const [plant, setPlant] = useState(null);
+  const [plant, setPlant] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -29,9 +30,18 @@ const ProductDetail = () => {
       setLoading(true);
       try {
         const plantData = await getPlantById(params.id);
-        setPlant(plantData);
+        if (plantData) {
+          setPlant(plantData);
+        } else {
+          // Fallback to sample data
+          const samplePlant = samplePlants.find(p => p.id === params.id);
+          setPlant(samplePlant || null);
+        }
       } catch (error) {
         console.error('Failed to fetch plant:', error);
+        // Fallback to sample data
+        const samplePlant = samplePlants.find(p => p.id === params.id);
+        setPlant(samplePlant || null);
       } finally {
         setLoading(false);
       }
@@ -111,7 +121,7 @@ const ProductDetail = () => {
             
             {plant.imageUrls && plant.imageUrls.length > 1 && (
               <div className="flex gap-2">
-                {plant.imageUrls.map((url, index) => (
+                {plant.imageUrls.map((url: string, index: number) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -135,7 +145,7 @@ const ProductDetail = () => {
           >
             <div>
               <div className="flex items-center gap-2 mb-2">
-                {plant.tags?.map((tag) => (
+                {plant.tags?.map((tag: string) => (
                   <Badge key={tag} className="bg-forest-500 text-white">
                     {tag}
                   </Badge>
