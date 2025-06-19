@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -18,15 +18,24 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-const googleProvider = new GoogleAuthProvider();
-
-// Auth functions
-export const signInWithGoogle = async () => {
+// Simple Auth functions
+export const signUpWithEmail = async (email: string, password: string, name: string) => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    await createUserDocument(result.user, name);
     return result;
   } catch (error) {
-    console.error('Google sign-in error:', error);
+    console.error('Sign up error:', error);
+    throw error;
+  }
+};
+
+export const signInWithEmail = async (email: string, password: string) => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result;
+  } catch (error) {
+    console.error('Sign in error:', error);
     throw error;
   }
 };
@@ -34,7 +43,7 @@ export const signInWithGoogle = async () => {
 export const logout = () => signOut(auth);
 
 // User functions
-export const createUserDocument = async (user: User) => {
+export const createUserDocument = async (user: User, displayName?: string) => {
   const userRef = doc(db, 'users', user.uid);
   const userSnap = await getDoc(userRef);
   
@@ -42,7 +51,7 @@ export const createUserDocument = async (user: User) => {
     await setDoc(userRef, {
       firebaseUid: user.uid,
       email: user.email,
-      displayName: user.displayName,
+      displayName: displayName || user.displayName || user.email,
       photoURL: user.photoURL,
       isAdmin: false,
       createdAt: new Date().toISOString(),

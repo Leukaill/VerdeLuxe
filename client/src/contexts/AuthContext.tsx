@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { auth, createUserDocument } from '@/lib/firebase';
 
 interface SimpleUser {
   id: string;
@@ -12,7 +12,6 @@ interface SimpleUser {
 interface AuthContextType {
   user: SimpleUser | null;
   loading: boolean;
-  signIn: (email: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -35,78 +34,39 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user');
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+      if (firebaseUser) {
+        // User is signed in, create user document if needed
+        await createUserDocument(firebaseUser);
+        const userData: SimpleUser = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || firebaseUser.email || '',
+          createdAt: new Date().toISOString(),
+        };
+        setUser(userData);
+      } else {
+        // User is signed out
+        setUser(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const signIn = async (email: string, name: string) => {
+  const handleSignOut = async () => {
     try {
-      // Check if user already exists
-      const usersQuery = query(
-        collection(db, 'users'),
-        where('email', '==', email.toLowerCase())
-      );
-      const existingUsers = await getDocs(usersQuery);
-      
-      let userData: SimpleUser;
-      
-      if (!existingUsers.empty) {
-        // User exists, sign them in
-        const existingUser = existingUsers.docs[0];
-        userData = {
-          id: existingUser.id,
-          email: existingUser.data().email,
-          name: existingUser.data().name,
-          createdAt: existingUser.data().createdAt
-        };
-      } else {
-        // Create new user
-        const docRef = await addDoc(collection(db, 'users'), {
-          email: email.toLowerCase(),
-          name: name.trim(),
-          createdAt: new Date().toISOString()
-        });
-        
-        userData = {
-          id: docRef.id,
-          email: email.toLowerCase(),
-          name: name.trim(),
-          createdAt: new Date().toISOString()
-        };
-      }
-      
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      await signOut(auth);
     } catch (error) {
-      console.error('Sign in failed:', error);
-      throw error;
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      setUser(null);
-      localStorage.removeItem('user');
-    } catch (error) {
-      console.error('Sign out failed:', error);
-      throw error;
+      console.error('Sign out error:', error);
     }
   };
 
   const value = {
     user,
     loading,
-    signIn,
-    signOut,
+    signOut: handleSignOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

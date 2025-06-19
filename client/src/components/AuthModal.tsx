@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Mail } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { User, Mail, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { signInWithEmail, signUpWithEmail } from '@/lib/firebase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,18 +13,19 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
-  const { signIn } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
-  const handleSimpleSignIn = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !name) {
+    if (!email || !password || (isSignUp && !name)) {
       toast({
         title: "Missing information",
-        description: "Please enter both your name and email",
+        description: isSignUp ? "Please fill in all fields" : "Please enter email and password",
         variant: "destructive"
       });
       return;
@@ -32,19 +33,29 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
     setIsLoading(true);
     try {
-      await signIn(email, name);
+      if (isSignUp) {
+        await signUpWithEmail(email, password, name);
+        toast({
+          title: "Account created!",
+          description: "Welcome to PlantShop Rwanda"
+        });
+      } else {
+        await signInWithEmail(email, password);
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully"
+        });
+      }
+      
       onClose();
       setEmail('');
+      setPassword('');
       setName('');
+    } catch (error: any) {
+      console.error('Auth failed:', error);
       toast({
-        title: "Welcome!",
-        description: "You have been signed in successfully"
-      });
-    } catch (error) {
-      console.error('Sign in failed:', error);
-      toast({
-        title: "Sign in failed",
-        description: "Please try again",
+        title: isSignUp ? "Sign up failed" : "Sign in failed",
+        description: error.message || "Please try again",
         variant: "destructive"
       });
     } finally {
@@ -54,70 +65,84 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md glass">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-sf font-bold text-forest-600">
-            Welcome to Verde Luxe
+          <DialogTitle className="text-2xl font-bold text-forest-800 text-center">
+            {isSignUp ? 'Create Account' : 'Sign In'}
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSimpleSignIn} className="space-y-6 py-4">
-          <div className="text-center space-y-2">
-            <p className="text-gray-600">
-              Sign in to access your account, save your wishlist, and track your orders.
-            </p>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Full Name
-              </Label>
-              <div className="mt-1 relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <form onSubmit={handleAuth} className="space-y-4">
+          {isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="name"
                   type="text"
+                  placeholder="Enter your name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your full name"
                   className="pl-10"
-                  disabled={isLoading}
+                  required
                 />
               </div>
             </div>
-            
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email Address
-              </Label>
-              <div className="mt-1 relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="pl-10"
-                  disabled={isLoading}
-                />
-              </div>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10"
+                required
+              />
             </div>
           </div>
           
-          <Button
-            type="submit"
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10"
+                required
+                minLength={6}
+              />
+            </div>
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-forest-600 hover:bg-forest-700"
             disabled={isLoading}
-            className="w-full bg-forest-500 hover:bg-forest-600 text-white py-3"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
           </Button>
-          
-          <div className="text-center text-sm text-gray-500">
-            By signing in, you agree to our Terms of Service and Privacy Policy.
-          </div>
         </form>
+        
+        <div className="text-center text-sm text-gray-600">
+          {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+          <button
+            type="button"
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="ml-1 text-forest-600 hover:text-forest-700 font-medium"
+          >
+            {isSignUp ? 'Sign In' : 'Sign Up'}
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -24,15 +26,12 @@ const Footer = () => {
 
     setIsSubscribing(true);
     try {
-      // Simple storage without Firebase dependency - just store locally for demo
-      const subscribers = JSON.parse(localStorage.getItem('newsletter_subscribers') || '[]');
-      const newSubscriber = {
+      // Write directly to Firestore
+      await addDoc(collection(db, 'newsletter_subscribers'), {
         email: email.trim().toLowerCase(),
         subscribedAt: new Date().toISOString(),
         isActive: true
-      };
-      subscribers.push(newSubscriber);
-      localStorage.setItem('newsletter_subscribers', JSON.stringify(subscribers));
+      });
       
       toast({
         title: "Successfully subscribed!",
