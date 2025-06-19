@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Leaf, Search, Heart, ShoppingCart, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import AuthModal from './AuthModal';
 
 const Navbar = () => {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, signOut } = useAuth();
   const { totalItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const navigation = [
     { name: 'Collections', href: '/products' },
@@ -25,6 +28,15 @@ const Navbar = () => {
       await signOut();
     } catch (error) {
       console.error('Sign out failed:', error);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setLocation(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery('');
     }
   };
 
@@ -56,9 +68,39 @@ const Navbar = () => {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="text-forest-600 hover:text-gold-500">
-                <Search className="h-5 w-5" />
-              </Button>
+              {isSearchOpen ? (
+                <form onSubmit={handleSearch} className="flex items-center space-x-2">
+                  <Input
+                    type="text"
+                    placeholder="Search plants..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-64"
+                    autoFocus
+                  />
+                  <Button type="submit" size="sm" className="bg-forest-500 hover:bg-forest-600 text-white">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setIsSearchOpen(false)}
+                    className="text-forest-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </form>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-forest-600 hover:text-gold-500"
+                  onClick={() => setIsSearchOpen(true)}
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
+              )}
               
               <Button variant="ghost" size="icon" className="relative text-forest-600 hover:text-gold-500">
                 <Heart className="h-5 w-5" />

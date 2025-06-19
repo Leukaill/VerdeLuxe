@@ -216,7 +216,10 @@ const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(
               <div className="glass rounded-lg p-3">
                 <div className="flex items-center space-x-2 text-white text-sm">
                   <Camera className="h-4 w-4" />
-                  <span>Point your camera at a flat surface to place the plant</span>
+                  <span>
+                    {error ? 'Simulated AR Experience - Use controls to interact with the plant' 
+                           : 'Point your camera at a flat surface to place the plant'}
+                  </span>
                 </div>
               </div>
             </div>

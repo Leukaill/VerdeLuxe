@@ -21,7 +21,16 @@ export const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Auth functions
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result;
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    throw error;
+  }
+};
+
 export const logout = () => signOut(auth);
 
 // User functions

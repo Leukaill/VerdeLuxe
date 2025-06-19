@@ -1,14 +1,6 @@
 import * as THREE from 'three';
 
-declare global {
-  interface Window {
-    MINDAR: {
-      IMAGE: {
-        MindARThree: any;
-      };
-    };
-  }
-}
+// Removed MindAR dependency for simpler AR simulation
 
 export class ARPlantVisualization {
   private mindarThree: any;
@@ -28,44 +20,58 @@ export class ARPlantVisualization {
 
   async init(): Promise<void> {
     try {
-      // Load MindAR script dynamically
-      await this.loadMindARScript();
-      
-      // Initialize MindAR
-      this.mindarThree = new window.MINDAR.IMAGE.MindARThree({
-        container: this.container,
-        imageTargetSrc: '/mind-ar-target.mind', // You'll need to create this target image
-      });
+      // For now, create a simple Three.js scene without MindAR
+      // This avoids the complex MindAR setup while providing AR-like functionality
+      this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.container.appendChild(this.renderer.domElement);
 
-      const { renderer, scene, camera } = this.mindarThree;
-      this.scene = scene;
-      this.camera = camera;
-      this.renderer = renderer;
+      // Setup camera
+      this.camera = new THREE.PerspectiveCamera(
+        75,
+        this.container.clientWidth / this.container.clientHeight,
+        0.1,
+        1000
+      );
+      this.camera.position.set(0, 1, 3);
 
       // Setup lighting
       this.setupLighting();
 
-      // Create anchor for placing plants
-      this.anchor = this.mindarThree.addAnchor(0);
+      // Create a simple anchor point
+      this.anchor = { group: new THREE.Group() };
+      this.scene.add(this.anchor.group);
+
+      // Add video background simulation
+      this.addVideoBackground();
+      
+      // Handle window resize
+      window.addEventListener('resize', this.onWindowResize.bind(this));
     } catch (error) {
       console.error('Failed to initialize AR:', error);
       throw error;
     }
   }
 
-  private async loadMindARScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (window.MINDAR) {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load MindAR script'));
-      document.head.appendChild(script);
+  private addVideoBackground(): void {
+    // Create a simulated camera background
+    const geometry = new THREE.PlaneGeometry(20, 20);
+    const material = new THREE.MeshBasicMaterial({ 
+      color: 0x87CEEB,
+      transparent: true,
+      opacity: 0.3
     });
+    const background = new THREE.Mesh(geometry, material);
+    background.position.z = -10;
+    this.scene.add(background);
+
+    // Add some ambient elements to simulate a room
+    const floorGeometry = new THREE.PlaneGeometry(10, 10);
+    const floorMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1;
+    this.scene.add(floor);
   }
 
   private setupLighting(): void {
@@ -153,7 +159,8 @@ export class ARPlantVisualization {
 
   async start(): Promise<void> {
     try {
-      await this.mindarThree.start();
+      // Start the animation loop
+      this.animate();
     } catch (error) {
       console.error('Failed to start AR:', error);
       throw error;
@@ -161,16 +168,39 @@ export class ARPlantVisualization {
   }
 
   stop(): void {
-    if (this.mindarThree) {
-      this.mindarThree.stop();
+    // Stop the animation loop
+    if (this.renderer) {
+      this.renderer.setAnimationLoop(null);
+    }
+  }
+
+  private animate(): void {
+    this.renderer.setAnimationLoop(() => {
+      // Simple rotation for demo purposes
+      if (this.plantModel) {
+        this.plantModel.rotation.y += 0.01;
+      }
+      this.renderer.render(this.scene, this.camera);
+    });
+  }
+
+  private onWindowResize(): void {
+    if (this.camera && this.renderer) {
+      this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
     }
   }
 
   dispose(): void {
     this.stop();
-    if (this.plantModel) {
-      this.anchor?.group.remove(this.plantModel);
+    if (this.plantModel && this.anchor) {
+      this.anchor.group.remove(this.plantModel);
     }
+    if (this.renderer && this.renderer.domElement && this.container.contains(this.renderer.domElement)) {
+      this.container.removeChild(this.renderer.domElement);
+    }
+    window.removeEventListener('resize', this.onWindowResize.bind(this));
   }
 
   isARSupported(): boolean {

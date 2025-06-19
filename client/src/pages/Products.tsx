@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Filter, Grid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,14 +6,36 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProductCard from '@/components/ProductCard';
 import { getPlants, getCategories } from '@/lib/firebase';
+import { samplePlants, sampleCategories } from '@/lib/sampleData';
+
+interface Plant {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  categoryId: string;
+  imageUrls: string[];
+  tags?: string[];
+  rating?: number;
+}
 
 const Products = () => {
-  const [plants, setPlants] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [plants, setPlants] = useState<Plant[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('name');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Get search query from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const search = urlParams.get('search');
+    if (search) {
+      setSearchQuery(search);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,10 +45,23 @@ const Products = () => {
           getPlants(),
           getCategories()
         ]);
-        setPlants(plantsData);
-        setCategories(categoriesData);
+        
+        if (plantsData && plantsData.length > 0) {
+          setPlants(plantsData as Plant[]);
+        } else {
+          setPlants(samplePlants);
+        }
+        
+        if (categoriesData && categoriesData.length > 0) {
+          setCategories(categoriesData);
+        } else {
+          setCategories(sampleCategories);
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        // Fallback to sample data
+        setPlants(samplePlants);
+        setCategories(sampleCategories);
       } finally {
         setLoading(false);
       }
@@ -35,24 +70,44 @@ const Products = () => {
     fetchData();
   }, []);
 
-  const filteredPlants = plants.filter(plant => {
-    if (filterCategory === 'all') return true;
-    return plant.categoryId === filterCategory;
-  });
-
-  const sortedPlants = [...filteredPlants].sort((a, b) => {
-    switch (sortBy) {
-      case 'price-low':
-        return a.price - b.price;
-      case 'price-high':
-        return b.price - a.price;
-      case 'rating':
-        return (b.rating || 0) - (a.rating || 0);
-      case 'name':
-      default:
-        return a.name.localeCompare(b.name);
+  // Filter and sort plants
+  const filteredPlants = useMemo(() => {
+    if (!plants) return [];
+    
+    let filtered = [...plants];
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(plant => 
+        plant.name.toLowerCase().includes(query) ||
+        plant.description.toLowerCase().includes(query) ||
+        plant.tags?.some(tag => tag.toLowerCase().includes(query))
+      );
     }
-  });
+    
+    // Filter by category
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter(plant => plant.categoryId === filterCategory);
+    }
+    
+    // Sort plants
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return a.price - b.price;
+        case 'price-high':
+          return b.price - a.price;
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'name':
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+    
+    return filtered;
+  }, [plants, filterCategory, sortBy, searchQuery]);
 
   if (loading) {
     return (

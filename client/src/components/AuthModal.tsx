@@ -14,10 +14,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const { signIn } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
+      setError(null);
       await signIn();
       onClose();
       toast({
@@ -26,6 +28,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       });
     } catch (error) {
       console.error('Sign in failed:', error);
+      setError('Failed to sign in with Google. Please try again.');
       toast({
         title: "Sign in failed",
         description: "Please try again.",
@@ -51,6 +54,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               Sign in to access your account, save your wishlist, and track your orders.
             </p>
           </div>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
           
           <Button
             onClick={handleGoogleSignIn}
