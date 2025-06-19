@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { localAuth } from '@/lib/localAuth';
+import { onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { auth, createUserDocument } from '@/lib/firebase';
 
 interface SimpleUser {
   id: string;
@@ -33,17 +34,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = localAuth.onAuthStateChange((authUser) => {
-      setUser(authUser);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+      if (firebaseUser) {
+        // User is signed in, create user document if needed
+        await createUserDocument(firebaseUser);
+        const userData: SimpleUser = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || firebaseUser.email || '',
+          createdAt: new Date().toISOString(),
+        };
+        setUser(userData);
+      } else {
+        // User is signed out
+        setUser(null);
+      }
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   const handleSignOut = async () => {
     try {
-      await localAuth.signOut();
+      await signOut(auth);
     } catch (error) {
       console.error('Sign out error:', error);
     }
