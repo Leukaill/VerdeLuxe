@@ -4,13 +4,13 @@ import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, delet
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCcNFwX5pGlz2nRJXYlbc3_Pz4R0k6s8Xs",
-  authDomain: "mvp-db-21c9b.firebaseapp.com",
-  projectId: "mvp-db-21c9b",
-  storageBucket: "mvp-db-21c9b.firebasestorage.app",
-  messagingSenderId: "198610566372",
-  appId: "1:198610566372:web:df58c6fa2207facdd400f1",
-  measurementId: "G-JWHP8XDN85"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCcNFwX5pGlz2nRJXYlbc3_Pz4R0k6s8Xs",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "mvp-db-21c9b.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "mvp-db-21c9b",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "mvp-db-21c9b.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "198610566372",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:198610566372:web:df58c6fa2207facdd400f1",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-JWHP8XDN85"
 };
 
 // Initialize Firebase only once
