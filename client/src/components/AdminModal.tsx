@@ -52,7 +52,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/authenticate', {
+      const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,6 +64,10 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        // Store admin session
+        localStorage.setItem('adminAuthenticated', 'true');
+        localStorage.setItem('adminEmail', adminEmail);
         toast({
           title: "Success",
           description: "Admin access granted"
@@ -137,6 +141,9 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         });
         setHasAdmin(true);
         setIsCreatingAdmin(false);
+        // Auto-login after creation
+        localStorage.setItem('adminAuthenticated', 'true');
+        localStorage.setItem('adminEmail', adminEmail);
         onClose();
         setLocation('/secure-admin-panel-verde-luxe');
       } else {

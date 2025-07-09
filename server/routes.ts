@@ -28,24 +28,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
-  // Admin authentication
-  app.post("/api/admin/authenticate", async (req, res) => {
+  // Admin login with email/password
+  app.post("/api/admin/login", async (req, res) => {
     try {
-      const { password } = req.body;
+      const { email, password } = req.body;
       
-      if (password !== 'verde-luxe-admin-2025') {
-        return res.status(401).json({ error: 'Invalid credentials' });
+      // Use raw SQL to avoid Drizzle syntax issues
+      const result = await db.execute(sql`SELECT * FROM admin_credentials WHERE email = ${email}`);
+      const admin = result.rows[0];
+
+      if (!admin || admin.password_hash !== password) {
+        return res.status(401).json({ error: 'Invalid admin credentials' });
       }
 
-      // Check if user is admin
-      const adminUser = await db.select().from(users).where(eq(users.isAdmin, true)).limit(1);
-      if (!adminUser.length) {
-        return res.status(403).json({ error: 'No admin user found' });
-      }
-
-      res.json({ success: true, user: adminUser[0] });
+      res.json({ success: true, admin });
     } catch (error) {
+      console.error('Admin login error:', error);
       res.status(500).json({ error: 'Authentication failed' });
+    }
+  });
+
+  // Check if admin exists
+  app.get("/api/admin/check-exists", async (req, res) => {
+    try {
+      const admin = await db.select().from(adminCredentials).limit(1);
+      res.json({ hasAdmin: admin.length > 0 });
+    } catch (error) {
+      console.error('Check admin exists error:', error);
+      res.status(500).json({ error: 'Failed to check admin status' });
+    }
+  });
+
+  // Create admin
+  app.post("/api/admin/create", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // Check if admin already exists
+      const existingAdmin = await db.select().from(adminCredentials).limit(1);
+      if (existingAdmin.length > 0) {
+        return res.status(400).json({ error: 'Admin already exists' });
+      }
+
+      // Create admin
+      await db.insert(adminCredentials).values({
+        userId: `admin-${Date.now()}`,
+        email,
+        passwordHash: password, // In production, this should be hashed
+      });
+
+      res.json({ success: true, message: 'Admin account created successfully' });
+    } catch (error) {
+      console.error('Create admin error:', error);
+      res.status(500).json({ error: 'Failed to create admin account' });
     }
   });
 

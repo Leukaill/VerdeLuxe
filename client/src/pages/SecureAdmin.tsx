@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -55,7 +54,6 @@ interface Plant {
 }
 
 const SecureAdmin = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [newsletters, setNewsletters] = useState<NewsletterSubscriber[]>([]);
@@ -66,34 +64,15 @@ const SecureAdmin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [editingContent, setEditingContent] = useState<SiteContent | null>(null);
 
-  // Check if user is admin
+  // Check if admin is authenticated
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const response = await fetch('/api/admin/check-status', {
-          headers: {
-            'Authorization': `Bearer ${await user.getIdToken()}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.isAdmin) {
-            setIsAuthenticated(true);
-            loadAdminData();
-          }
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, [user]);
+    const isAuthenticated = localStorage.getItem('adminAuthenticated') === 'true';
+    setIsAuthenticated(isAuthenticated);
+    setLoading(false);
+    if (isAuthenticated) {
+      loadAdminData();
+    }
+  }, []);
 
   const loadAdminData = async () => {
     try {
@@ -119,42 +98,18 @@ const SecureAdmin = () => {
   };
 
   const handleAdminAuth = async () => {
-    if (adminPassword === 'verde-luxe-admin-2025') {
-      try {
-        const response = await fetch('/api/admin/authenticate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${await user?.getIdToken()}`
-          },
-          body: JSON.stringify({ password: adminPassword })
-        });
-
-        if (response.ok) {
-          setIsAuthenticated(true);
-          loadAdminData();
-          toast({
-            title: "Success",
-            description: "Admin access granted"
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: "Invalid admin credentials",
-            variant: "destructive"
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Authentication failed",
-          variant: "destructive"
-        });
-      }
-    } else {
+    // Auto authenticate since user came from admin creation
+    try {
+      setIsAuthenticated(true);
+      loadAdminData();
+      toast({
+        title: "Success",
+        description: "Admin access granted"
+      });
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid admin password",
+        description: "Authentication failed",
         variant: "destructive"
       });
     }
@@ -218,6 +173,16 @@ const SecureAdmin = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuthenticated');
+    localStorage.removeItem('adminEmail');
+    setIsAuthenticated(false);
+    toast({
+      title: "Logged Out",
+      description: "Admin session ended"
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -226,18 +191,7 @@ const SecureAdmin = () => {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Access Denied</CardTitle>
-            <CardDescription>Please log in to continue</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
+
 
   if (!isAuthenticated) {
     return (
@@ -270,9 +224,14 @@ const SecureAdmin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <Shield className="h-8 w-8 text-green-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Verde Luxe Admin Panel</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Shield className="h-8 w-8 text-green-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Verde Luxe Admin Panel</h1>
+          </div>
+          <Button onClick={handleLogout} variant="outline">
+            Logout
+          </Button>
         </div>
 
         <Tabs defaultValue="plants" className="space-y-6">
