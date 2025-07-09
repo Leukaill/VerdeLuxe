@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Package, ShoppingCart, Users, BarChart3 } from 'lucide-react';
+import { Plus, Package, ShoppingCart, Users, BarChart3, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { getPlants, getOrders, getCategories } from '@/lib/firebase';
+import { getPlants, getOrders, getCategories, seedFirestoreData } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 import PlantForm from '@/components/admin/PlantForm';
 import OrderManagement from '@/components/admin/OrderManagement';
 
 const Admin = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [plants, setPlants] = useState([]);
   const [orders, setOrders] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPlantForm, setShowPlantForm] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,22 +42,13 @@ const Admin = () => {
     fetchData();
   }, []);
 
-  // Simple admin check - in a real app, this would be more robust
+  // Check if admin is authenticated via local storage (from AdminModal)
   const [isAdmin, setIsAdmin] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="pt-20 min-h-screen flex items-center justify-center">
-        <Card className="glass max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center space-y-4">
-            <Users className="h-16 w-16 text-gray-400 mx-auto" />
-            <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
-            <p className="text-gray-600">Please sign in to access the admin panel.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const adminAuth = localStorage.getItem('adminAuthenticated');
+    setIsAdmin(adminAuth === 'true');
+  }, []);
 
   if (!isAdmin) {
     return (
@@ -63,7 +57,13 @@ const Admin = () => {
           <CardContent className="p-8 text-center space-y-4">
             <Users className="h-16 w-16 text-red-400 mx-auto" />
             <h1 className="text-2xl font-bold text-gray-900">Admin Access Required</h1>
-            <p className="text-gray-600">You don't have permission to access this area.</p>
+            <p className="text-gray-600">Please authenticate through the admin login to access this area.</p>
+            <Button 
+              onClick={() => window.location.href = '/'}
+              className="bg-forest-500 hover:bg-forest-600 text-white"
+            >
+              Go to Homepage
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -168,9 +168,10 @@ const Admin = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="plants" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="plants">Plant Management</TabsTrigger>
             <TabsTrigger value="orders">Order Management</TabsTrigger>
+            <TabsTrigger value="database">Database</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -227,6 +228,81 @@ const Admin = () => {
 
           <TabsContent value="orders" className="mt-6">
             <OrderManagement orders={orders} />
+          </TabsContent>
+
+          <TabsContent value="database" className="mt-6">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="text-forest-600 flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Database Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">Seed Firestore Database</h3>
+                  <p className="text-blue-700 mb-4">
+                    This will populate your Firestore database with sample categories, plants, and content data. 
+                    Perfect for getting started with your Verde Luxe store.
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      setSeeding(true);
+                      try {
+                        await seedFirestoreData();
+                        toast({
+                          title: "Success",
+                          description: "Firestore database has been seeded successfully!"
+                        });
+                        // Refresh data
+                        setTimeout(() => window.location.reload(), 1000);
+                      } catch (error) {
+                        console.error('Seeding error:', error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to seed database. Please try again.",
+                          variant: "destructive"
+                        });
+                      } finally {
+                        setSeeding(false);
+                      }
+                    }}
+                    disabled={seeding}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {seeding ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Seeding Database...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="h-4 w-4 mr-2" />
+                        Seed Firestore Database
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2">Database Status</h3>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-2xl font-bold text-forest-600">{plants.length}</p>
+                      <p className="text-sm text-gray-600">Plants</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-forest-600">{categories.length}</p>
+                      <p className="text-sm text-gray-600">Categories</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-forest-600">{orders.length}</p>
+                      <p className="text-sm text-gray-600">Orders</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
