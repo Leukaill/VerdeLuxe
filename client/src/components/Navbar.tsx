@@ -171,12 +171,65 @@ const Navbar = () => {
         >
           {/* Main Dynamic Island */}
           <motion.div
-            className="bg-black/90 backdrop-blur-xl rounded-full shadow-xl border border-white/10"
+            className="relative overflow-hidden shadow-2xl"
+            style={{
+              background: `
+                linear-gradient(135deg, 
+                  rgba(255, 255, 255, 0.25) 0%,
+                  rgba(255, 255, 255, 0.15) 25%,
+                  rgba(255, 255, 255, 0.05) 50%,
+                  rgba(0, 0, 0, 0.1) 75%,
+                  rgba(0, 0, 0, 0.2) 100%
+                ),
+                linear-gradient(45deg,
+                  rgba(255, 255, 255, 0.1) 0%,
+                  rgba(255, 255, 255, 0.05) 100%
+                ),
+                rgba(0, 0, 0, 0.3)
+              `,
+              backdropFilter: 'blur(20px) saturate(1.8)',
+              WebkitBackdropFilter: 'blur(20px) saturate(1.8)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: `
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2)
+              `,
+            }}
             animate={{
               borderRadius: isMenuOpen ? "24px" : "25px",
             }}
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
           >
+            {/* Glass Reflection Effects */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Top highlight */}
+              <div 
+                className="absolute top-0 left-0 right-0 h-1/2 opacity-30"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 70%, transparent 100%)',
+                  borderRadius: 'inherit',
+                }}
+              />
+              {/* Bottom shadow */}
+              <div 
+                className="absolute bottom-0 left-0 right-0 h-1/3 opacity-20"
+                style={{
+                  background: 'linear-gradient(0deg, rgba(0,0,0,0.3) 0%, transparent 100%)',
+                  borderRadius: 'inherit',
+                }}
+              />
+              {/* Side highlights */}
+              <div 
+                className="absolute top-1/4 left-0 w-px h-1/2 bg-white/20"
+                style={{ borderRadius: '1px' }}
+              />
+              <div 
+                className="absolute top-1/4 right-0 w-px h-1/2 bg-black/20"
+                style={{ borderRadius: '1px' }}
+              />
+            </div>
             {/* Collapsed State */}
             <AnimatePresence>
               {!isMenuOpen && (
@@ -246,7 +299,38 @@ const Navbar = () => {
                         placeholder="Search plants..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 pl-10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                        className="w-full px-4 py-3 pl-10 text-white placeholder-white/60 focus:outline-none transition-all duration-300"
+                        style={{
+                          background: `
+                            linear-gradient(135deg, 
+                              rgba(255, 255, 255, 0.15) 0%,
+                              rgba(255, 255, 255, 0.05) 100%
+                            )
+                          `,
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '12px',
+                          boxShadow: `
+                            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                            0 4px 8px rgba(0, 0, 0, 0.1)
+                          `,
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.boxShadow = `
+                            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                            0 0 0 2px rgba(34, 197, 94, 0.3),
+                            0 4px 12px rgba(0, 0, 0, 0.2)
+                          `;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.boxShadow = `
+                            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                            0 4px 8px rgba(0, 0, 0, 0.1)
+                          `;
+                        }}
                       />
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
                     </form>
@@ -264,9 +348,42 @@ const Navbar = () => {
                         <Link
                           href={item.href}
                           onClick={() => setIsMenuOpen(false)}
-                          className={`block px-4 py-3 rounded-xl text-white/90 hover:text-white hover:bg-white/10 transition-all ${
-                            location === item.href ? 'bg-green-400/20 text-green-400' : ''
+                          className={`block px-4 py-3 rounded-xl text-white/90 hover:text-white transition-all duration-300 ${
+                            location === item.href ? 'text-green-400' : ''
                           }`}
+                          style={location === item.href ? {
+                            background: `
+                              linear-gradient(135deg, 
+                                rgba(34, 197, 94, 0.3) 0%,
+                                rgba(34, 197, 94, 0.1) 100%
+                              )
+                            `,
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(34, 197, 94, 0.3)',
+                            boxShadow: `
+                              inset 0 1px 0 rgba(34, 197, 94, 0.4),
+                              0 2px 8px rgba(34, 197, 94, 0.1)
+                            `,
+                          } : {}}
+                          onMouseEnter={(e) => {
+                            if (location !== item.href) {
+                              e.currentTarget.style.background = `
+                                linear-gradient(135deg, 
+                                  rgba(255, 255, 255, 0.15) 0%,
+                                  rgba(255, 255, 255, 0.05) 100%
+                                )
+                              `;
+                              e.currentTarget.style.backdropFilter = 'blur(8px)';
+                              e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (location !== item.href) {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.backdropFilter = 'none';
+                              e.currentTarget.style.border = '1px solid transparent';
+                            }
+                          }}
                         >
                           {item.name}
                         </Link>
@@ -275,18 +392,48 @@ const Navbar = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center justify-around py-4 border-t border-white/20 mb-4">
-                    <button className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-colors">
+                  <div className="flex items-center justify-around py-4 mb-4">
+                    <div 
+                      className="h-px flex-1"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-around mb-6">
+                    <button 
+                      className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-all duration-300 p-3 rounded-xl"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)',
+                      }}
+                    >
                       <Heart className="w-5 h-5" />
                       <span className="text-xs">Wishlist</span>
                     </button>
                     
                     <Link href="/cart" onClick={() => setIsMenuOpen(false)}>
-                      <button className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-colors relative">
+                      <button 
+                        className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-all duration-300 relative p-3 rounded-xl"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                          backdropFilter: 'blur(8px)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)',
+                        }}
+                      >
                         <ShoppingCart className="w-5 h-5" />
                         <span className="text-xs">Cart</span>
                         {totalItems > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-green-400 text-black text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                          <span 
+                            className="absolute -top-1 -right-1 text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(34, 197, 94, 1) 0%, rgba(22, 163, 74, 1) 100%)',
+                              boxShadow: '0 2px 4px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                            }}
+                          >
                             {totalItems}
                           </span>
                         )}
@@ -294,7 +441,15 @@ const Navbar = () => {
                     </Link>
                     
                     <Link href="/3d-studio" onClick={() => setIsMenuOpen(false)}>
-                      <button className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-colors">
+                      <button 
+                        className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-all duration-300 p-3 rounded-xl"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                          backdropFilter: 'blur(8px)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)',
+                        }}
+                      >
                         <div className="w-5 h-5 border border-current rounded"></div>
                         <span className="text-xs">3D View</span>
                       </button>
@@ -306,7 +461,15 @@ const Navbar = () => {
                     {user ? (
                       <div className="space-y-3">
                         <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
-                          <button className="w-full text-left px-4 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">
+                          <button 
+                            className="w-full text-left px-4 py-3 rounded-xl text-white transition-all duration-300"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%)',
+                              backdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.1)',
+                            }}
+                          >
                             👋 {user.name || 'Profile'}
                           </button>
                         </Link>
@@ -315,7 +478,13 @@ const Navbar = () => {
                             handleSignOut();
                             setIsMenuOpen(false);
                           }}
-                          className="w-full text-left px-4 py-3 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                          className="w-full text-left px-4 py-3 rounded-xl text-red-300 transition-all duration-300"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            boxShadow: 'inset 0 1px 0 rgba(239, 68, 68, 0.2), 0 4px 12px rgba(239, 68, 68, 0.1)',
+                          }}
                         >
                           Sign Out
                         </button>
@@ -326,7 +495,31 @@ const Navbar = () => {
                           setIsAuthModalOpen(true);
                           setIsMenuOpen(false);
                         }}
-                        className="w-full px-4 py-3 rounded-xl bg-green-400 text-black font-semibold hover:bg-green-300 transition-colors"
+                        className="w-full px-4 py-3 rounded-xl text-black font-semibold transition-all duration-300"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(34, 197, 94, 1) 0%, rgba(22, 163, 74, 1) 100%)',
+                          boxShadow: `
+                            0 4px 16px rgba(34, 197, 94, 0.3),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+                          `,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = `
+                            0 6px 20px rgba(34, 197, 94, 0.4),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+                          `;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = `
+                            0 4px 16px rgba(34, 197, 94, 0.3),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+                          `;
+                        }}
                       >
                         Sign In
                       </button>
