@@ -101,9 +101,25 @@ export const createUserDocument = async (user: User, displayName?: string) => {
 
 // Categories functions
 export const getCategories = async () => {
-  const categoriesRef = collection(db, 'categories');
-  const snapshot = await getDocs(categoriesRef);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    console.log('Fetching categories from Firestore...');
+    const categoriesRef = collection(db, 'categories');
+    const snapshot = await getDocs(categoriesRef);
+    console.log('Categories snapshot:', snapshot);
+    console.log('Categories docs count:', snapshot.docs.length);
+    
+    const categories = snapshot.docs.map(doc => {
+      const data = { id: doc.id, ...doc.data() };
+      console.log('Category data:', data);
+      return data;
+    });
+    
+    console.log('Final categories result:', categories);
+    return categories;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
 };
 
 export const createCategory = async (categoryData: any) => {

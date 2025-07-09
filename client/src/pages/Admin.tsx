@@ -71,6 +71,11 @@ const Admin = () => {
           categories: categoriesData.length,
           categoriesData: categoriesData
         });
+        
+        // Additional debugging for categories
+        console.log('Categories fetch result:', categoriesData);
+        console.log('Categories type:', typeof categoriesData);
+        console.log('Categories isArray:', Array.isArray(categoriesData));
         setPlants(plantsData);
         setOrders(ordersData);
         setCategories(categoriesData);
