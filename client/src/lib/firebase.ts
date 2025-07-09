@@ -377,6 +377,9 @@ export const deleteAdminCredentials = async (adminId: string) => {
 export const seedFirestoreData = async () => {
   try {
     console.log('Starting Firestore database seeding...');
+    
+    // Update Firestore rules to allow seeding temporarily
+    console.log('Note: Make sure Firestore rules allow write access for seeding');
 
     // Categories data
     const categoriesData = [

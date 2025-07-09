@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Layout from "@/components/Layout";
+import SeedButton from "@/components/SeedButton";
 import Home from "@/pages/Home";
 import Products from "@/pages/Products";
 import ProductDetail from "@/pages/ProductDetail";
@@ -54,6 +55,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <SeedButton />
           </TooltipProvider>
         </CartProvider>
       </AuthProvider>
