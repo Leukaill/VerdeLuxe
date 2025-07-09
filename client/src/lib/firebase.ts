@@ -3,14 +3,14 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
+// Placeholder config - will be updated when you provide new Firebase project details
 const firebaseConfig = {
-  apiKey: "AIzaSyAqxMS295v7XBtFrwZKtrEgb_b_hxzy77Q",
-  authDomain: "mydb-47035.firebaseapp.com",
-  projectId: "mydb-47035",
-  storageBucket: "mydb-47035.firebasestorage.app",
-  messagingSenderId: "816767003162",
-  appId: "1:816767003162:web:8530107cd5baadc9167fa3",
-  measurementId: "G-QRH3R4MTEC"
+  apiKey: "your-new-api-key",
+  authDomain: "your-new-project.firebaseapp.com",
+  projectId: "your-new-project-id",
+  storageBucket: "your-new-project.firebasestorage.app",
+  messagingSenderId: "your-sender-id",
+  appId: "your-app-id"
 };
 
 const app = initializeApp(firebaseConfig);
