@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { getPlants, getOrders } from '@/lib/firebase';
+import { getPlants, getOrders, getCategories } from '@/lib/firebase';
 import { seedFirestoreSimple } from '@/lib/seedFirestore';
 import { useToast } from '@/hooks/use-toast';
 import PlantForm from '@/components/admin/PlantForm';
@@ -40,8 +40,8 @@ const Admin = () => {
 
   const checkFirestoreStatus = async () => {
     try {
-      // Test Firestore connection by trying to fetch plants
-      const plants = await getPlants();
+      // Test Firestore connection by trying to fetch categories
+      const categories = await getCategories();
       setFirestoreStatus({ 
         connected: true, 
         message: 'Firestore connection successful',
@@ -56,20 +56,6 @@ const Admin = () => {
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      if (!response.ok) {
-        throw new Error('Failed to fetch categories');
-      }
-      const categoriesData = await response.json();
-      return categoriesData;
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      return [];
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -77,7 +63,7 @@ const Admin = () => {
         const [plantsData, ordersData, categoriesData] = await Promise.all([
           getPlants(),
           getOrders(),
-          fetchCategories()
+          getCategories()
         ]);
         console.log('Admin data fetched:', {
           plants: plantsData.length,

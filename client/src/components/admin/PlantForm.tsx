@@ -243,7 +243,7 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
                           <div className="p-2 text-gray-500">No categories available. Please seed the database first.</div>
                         ) : (
                           categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
+                            <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
                           ))
