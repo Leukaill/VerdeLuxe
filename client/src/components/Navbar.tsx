@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Leaf, Search, Heart, ShoppingCart, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,17 +6,23 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
 import AuthModal from './AuthModal';
 
 const Navbar = () => {
   const [location, setLocation] = useLocation();
   const { user, signOut } = useAuth();
   const { totalItems } = useCart();
+  const { toast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  
+  // Admin access state
+  const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [isPressed, setIsPressed] = useState(false);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -43,17 +49,76 @@ const Navbar = () => {
     }
   };
 
+  // Admin access handlers
+  const handleLogoMouseDown = () => {
+    setIsPressed(true);
+    pressTimer.current = setTimeout(() => {
+      if (user) {
+        setLocation('/secure-admin-panel-verde-luxe');
+        toast({
+          title: "Admin Access",
+          description: "Entering secure admin panel",
+        });
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "Please sign in first",
+          variant: "destructive"
+        });
+      }
+    }, 3000); // 3 seconds
+  };
+
+  const handleLogoMouseUp = () => {
+    setIsPressed(false);
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+
+  const handleLogoMouseLeave = () => {
+    setIsPressed(false);
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+
   return (
     <>
       {/* Desktop Navbar */}
       <nav className="fixed top-0 w-full z-50 glass hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <Leaf className="text-forest-500 text-2xl" />
-              <span className="font-sf font-bold text-xl text-forest-600">Verde Luxe</span>
-            </Link>
+            {/* Logo with hidden admin access */}
+            <div 
+              className="flex items-center space-x-2 cursor-pointer select-none"
+              onMouseDown={handleLogoMouseDown}
+              onMouseUp={handleLogoMouseUp}
+              onMouseLeave={handleLogoMouseLeave}
+              onTouchStart={handleLogoMouseDown}
+              onTouchEnd={handleLogoMouseUp}
+              onClick={(e) => {
+                if (!isPressed) {
+                  setLocation('/');
+                }
+                e.preventDefault();
+              }}
+            >
+              <motion.div
+                animate={{
+                  scale: isPressed ? 1.1 : 1,
+                  rotateY: isPressed ? 360 : 0
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <Leaf className={`text-2xl transition-colors ${isPressed ? 'text-gold-500' : 'text-forest-500'}`} />
+              </motion.div>
+              <span className={`font-sf font-bold text-xl transition-colors ${isPressed ? 'text-gold-500' : 'text-forest-600'}`}>
+                Verde Luxe
+              </span>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">

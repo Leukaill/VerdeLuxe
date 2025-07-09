@@ -13,6 +13,7 @@ import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 import Profile from "@/pages/Profile";
 import Admin from "@/pages/Admin";
+import SecureAdmin from "@/pages/SecureAdmin";
 import ThreeDStudio from "@/pages/ThreeDStudio";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
@@ -32,6 +33,7 @@ function Router() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/profile" component={Profile} />
         <Route path="/admin" component={Admin} />
+        <Route path="/secure-admin-panel-verde-luxe" component={SecureAdmin} />
         <Route path="/3d-studio" component={ThreeDStudio} />
         <Route path="/about" component={About} />
         <Route path="/contact" component={Contact} />
