@@ -2,11 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, plants, categories, orders, orderItems, wishlistItems, reviews, newsletterSubscribers, siteContent } from "../shared/schema";
+import { users, plants, categories, orders, orderItems, wishlistItems, reviews, newsletterSubscribers, siteContent, plantPhotos } from "../shared/schema";
 import { eq, desc, sql, and, ne } from "drizzle-orm";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { upload, savePhotoToDatabase, getPlantPhotos, deletePhoto, setPrimaryPhoto } from './photoUpload';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for file uploads
@@ -325,6 +326,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Image upload error:', error);
       res.status(500).json({ error: 'Image upload failed' });
+    }
+  });
+
+  // Plant photo upload endpoint (for hybrid storage)
+  app.post("/api/plants/:plantId/photos", upload.array('photos', 5), async (req, res) => {
+    try {
+      const { plantId } = req.params;
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: 'No files uploaded' });
+      }
+
+      const savedPhotos = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const isPrimary = i === 0; // First photo is primary by default
+        
+        const photo = await savePhotoToDatabase(plantId, file, isPrimary);
+        savedPhotos.push(photo);
+      }
+
+      res.json({ 
+        success: true, 
+        photos: savedPhotos,
+        message: `${savedPhotos.length} photo(s) uploaded successfully`
+      });
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      res.status(500).json({ error: 'Photo upload failed' });
+    }
+  });
+
+  // Get photos for a plant
+  app.get("/api/plants/:plantId/photos", async (req, res) => {
+    try {
+      const { plantId } = req.params;
+      const photos = await getPlantPhotos(plantId);
+      res.json(photos);
+    } catch (error) {
+      console.error('Error fetching photos:', error);
+      res.status(500).json({ error: 'Failed to fetch photos' });
+    }
+  });
+
+  // Delete a photo
+  app.delete("/api/photos/:photoId", verifyAdmin, async (req, res) => {
+    try {
+      const { photoId } = req.params;
+      await deletePhoto(parseInt(photoId));
+      res.json({ success: true, message: 'Photo deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      res.status(500).json({ error: 'Failed to delete photo' });
+    }
+  });
+
+  // Set primary photo
+  app.patch("/api/plants/:plantId/photos/:photoId/primary", verifyAdmin, async (req, res) => {
+    try {
+      const { plantId, photoId } = req.params;
+      await setPrimaryPhoto(plantId, parseInt(photoId));
+      res.json({ success: true, message: 'Primary photo updated successfully' });
+    } catch (error) {
+      console.error('Error setting primary photo:', error);
+      res.status(500).json({ error: 'Failed to set primary photo' });
     }
   });
 

@@ -199,8 +199,35 @@ export const getPlants = async (categoryId?: string, featured?: boolean) => {
       return dateB.getTime() - dateA.getTime();
     });
     
-    console.log('Final plants result:', filteredPlants);
-    return filteredPlants;
+    // Fetch photos for each plant from PostgreSQL
+    console.log('Fetching photos for plants...');
+    const plantsWithPhotos = await Promise.all(
+      filteredPlants.map(async (plant) => {
+        try {
+          const photosResponse = await fetch(`/api/plants/${plant.id}/photos`);
+          const photos = photosResponse.ok ? await photosResponse.json() : [];
+          
+          // Convert PostgreSQL photos to imageUrls format for compatibility
+          const imageUrls = photos.map((photo: any) => photo.url);
+          
+          return {
+            ...plant,
+            imageUrls,
+            photos // Keep the full photo objects for admin use
+          };
+        } catch (error) {
+          console.error(`Error fetching photos for plant ${plant.id}:`, error);
+          return {
+            ...plant,
+            imageUrls: [],
+            photos: []
+          };
+        }
+      })
+    );
+    
+    console.log('Final plants result with photos:', plantsWithPhotos);
+    return plantsWithPhotos;
   } catch (error) {
     console.error('Error fetching plants:', error);
     console.error('Error details:', {
@@ -235,6 +262,8 @@ export const createPlant = async (plantData: any) => {
       createdAt: new Date().toISOString(),
       isActive: true,
       slug: plantData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      // Remove imageUrls from Firestore - photos will be stored in PostgreSQL
+      imageUrls: [],
     };
     
     console.log('Final plant data to create:', plantToCreate);

@@ -112,6 +112,19 @@ export const siteContent = pgTable("site_content", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const plantPhotos = pgTable("plant_photos", {
+  id: serial("id").primaryKey(),
+  firestorePlantId: text("firestore_plant_id").notNull(), // References the Firestore plant document ID
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  filePath: text("file_path").notNull(),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(),
+  url: text("url").notNull(), // Local URL to access the photo
+  isPrimary: boolean("is_primary").default(false), // Main photo for the plant
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -163,6 +176,11 @@ export const insertSiteContentSchema = createInsertSchema(siteContent).omit({
   updatedAt: true,
 });
 
+export const insertPlantPhotoSchema = createInsertSchema(plantPhotos).omit({
+  id: true,
+  createdAt: true,
+});
+
 
 
 // Types
@@ -195,5 +213,8 @@ export type InsertNewsletterSubscriber = z.infer<typeof insertNewsletterSubscrib
 
 export type SiteContent = typeof siteContent.$inferSelect;
 export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
+
+export type PlantPhoto = typeof plantPhotos.$inferSelect;
+export type InsertPlantPhoto = z.infer<typeof insertPlantPhotoSchema>;
 
 
