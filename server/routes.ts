@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, plants, categories, orders, orderItems, wishlistItems, reviews, newsletterSubscribers, siteContent } from "../shared/schema";
+import { users, plants, categories, orders, orderItems, wishlistItems, reviews, newsletterSubscribers, siteContent, adminCredentials } from "../shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -206,6 +206,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(allCategories);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/check-exists', async (req, res) => {
+    try {
+      // Check if any admin exists in the system
+      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
+      const hasAdmin = adminUsers.length > 0;
+      res.json({ hasAdmin });
+    } catch (error) {
+      console.error('Error checking admin existence:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/admin/create', async (req, res) => {
+    try {
+      const { userId, email, password } = req.body;
+
+      // Check if admin already exists
+      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
+      if (adminUsers.length > 0) {
+        return res.status(400).json({ message: 'Admin account already exists' });
+      }
+
+      // Create admin credentials
+      await db.insert(adminCredentials)
+        .values({
+          userId,
+          email,
+          passwordHash: password // In production, hash the password
+        })
+        .onConflictDoUpdate({
+          target: adminCredentials.userId,
+          set: {
+            passwordHash: password,
+            updatedAt: new Date()
+          }
+        });
+
+      // Update user as admin
+      await db.update(users)
+        .set({ isAdmin: true })
+        .where(eq(users.firebaseUid, userId));
+
+      res.json({ success: true, message: 'Admin account created successfully' });
+    } catch (error) {
+      console.error('Error creating admin:', error);
+      res.status(500).json({ error: 'Failed to create admin account' });
+    }
+  });
+
+  app.post('/api/admin/authenticate', async (req, res) => {
+    try {
+      const { userId, password } = req.body;
+
+      // Check admin credentials
+      const adminCred = await db.select()
+        .from(adminCredentials)
+        .where(eq(adminCredentials.userId, userId))
+        .limit(1);
+
+      if (adminCred.length === 0 || adminCred[0].passwordHash !== password) {
+        return res.status(401).json({ message: 'Invalid admin credentials' });
+      }
+
+      // Update user as admin if not already
+      await db.update(users)
+        .set({ isAdmin: true })
+        .where(eq(users.firebaseUid, userId));
+
+      res.json({ success: true, message: 'Admin authenticated successfully' });
+    } catch (error) {
+      console.error('Error authenticating admin:', error);
+      res.status(500).json({ error: 'Authentication failed' });
     }
   });
 

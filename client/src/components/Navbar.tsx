@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import AuthModal from './AuthModal';
+import AdminModal from './AdminModal';
 
 const Navbar = () => {
   const [location, setLocation] = useLocation();
@@ -16,6 +17,7 @@ const Navbar = () => {
   const { toast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -54,10 +56,10 @@ const Navbar = () => {
     setIsPressed(true);
     pressTimer.current = setTimeout(() => {
       if (user) {
-        setLocation('/secure-admin-panel-verde-luxe');
+        setIsAdminModalOpen(true);
         toast({
           title: "Admin Access",
-          description: "Entering secure admin panel",
+          description: "Opening admin authentication",
         });
       } else {
         toast({
@@ -686,6 +688,7 @@ const Navbar = () => {
       </div>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} />
     </>
   );
 };
