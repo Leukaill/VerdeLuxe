@@ -52,8 +52,19 @@ const Navbar = () => {
   };
 
   // Admin access handlers
-  const handleLogoMouseDown = () => {
+  const handleLogoStart = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
     setIsPressed(true);
+    
+    // Show progress toast for mobile users
+    if (e.type === 'touchstart') {
+      toast({
+        title: "Admin Access",
+        description: "Hold to access admin panel...",
+        duration: 2500,
+      });
+    }
+    
     pressTimer.current = setTimeout(() => {
       setIsAdminModalOpen(true);
       toast({
@@ -63,7 +74,8 @@ const Navbar = () => {
     }, 3000); // 3 seconds
   };
 
-  const handleLogoMouseUp = () => {
+  const handleLogoEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
     setIsPressed(false);
     if (pressTimer.current) {
       clearTimeout(pressTimer.current);
@@ -71,7 +83,8 @@ const Navbar = () => {
     }
   };
 
-  const handleLogoMouseLeave = () => {
+  const handleLogoCancel = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
     setIsPressed(false);
     if (pressTimer.current) {
       clearTimeout(pressTimer.current);
@@ -88,11 +101,12 @@ const Navbar = () => {
             {/* Logo with hidden admin access */}
             <div 
               className="flex items-center space-x-2 cursor-pointer select-none"
-              onMouseDown={handleLogoMouseDown}
-              onMouseUp={handleLogoMouseUp}
-              onMouseLeave={handleLogoMouseLeave}
-              onTouchStart={handleLogoMouseDown}
-              onTouchEnd={handleLogoMouseUp}
+              onMouseDown={handleLogoStart}
+              onMouseUp={handleLogoEnd}
+              onMouseLeave={handleLogoCancel}
+              onTouchStart={handleLogoStart}
+              onTouchEnd={handleLogoEnd}
+              onTouchCancel={handleLogoCancel}
               onClick={(e) => {
                 if (!isPressed) {
                   setLocation('/');
@@ -300,11 +314,35 @@ const Navbar = () => {
                   transition={{ duration: 0.2 }}
                   className="flex items-center justify-between px-4 py-3"
                 >
-                  {/* Logo */}
-                  <Link href="/" className="flex items-center space-x-2">
-                    <Leaf className="text-green-400 w-5 h-5" />
-                    <span className="font-sf font-bold text-sm text-white">Verde</span>
-                  </Link>
+                  {/* Logo with admin access */}
+                  <div 
+                    className="flex items-center space-x-2 cursor-pointer select-none"
+                    onMouseDown={handleLogoStart}
+                    onMouseUp={handleLogoEnd}
+                    onMouseLeave={handleLogoCancel}
+                    onTouchStart={handleLogoStart}
+                    onTouchEnd={handleLogoEnd}
+                    onTouchCancel={handleLogoCancel}
+                    onClick={(e) => {
+                      if (!isPressed) {
+                        setLocation('/');
+                      }
+                      e.preventDefault();
+                    }}
+                  >
+                    <motion.div
+                      animate={{
+                        scale: isPressed ? 1.1 : 1,
+                        rotateY: isPressed ? 360 : 0
+                      }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Leaf className={`w-5 h-5 transition-colors ${isPressed ? 'text-yellow-400' : 'text-green-400'}`} />
+                    </motion.div>
+                    <span className={`font-sf font-bold text-sm transition-colors ${isPressed ? 'text-yellow-400' : 'text-white'}`}>
+                      Verde
+                    </span>
+                  </div>
 
                   {/* Action Icons */}
                   <div className="flex items-center space-x-3">
