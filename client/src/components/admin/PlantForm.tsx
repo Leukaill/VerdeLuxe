@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createPlant, uploadFile } from '@/lib/firebase';
+import { createPlant, uploadPlantPhotos } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 const plantSchema = z.object({
@@ -111,28 +111,10 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
         return;
       }
 
-      console.log('Starting image upload process, images count:', images.length);
-      
-      // Upload images
-      const uploadedImageUrls = [];
-      
-      for (const image of images) {
-        console.log('Uploading image:', image.name);
-        const imagePath = `plants/${Date.now()}-${image.name}`;
-        try {
-          const imageUrl = await uploadFile(image, imagePath);
-          console.log('Image uploaded successfully:', imageUrl);
-          uploadedImageUrls.push(imageUrl);
-        } catch (uploadError) {
-          console.error('Failed to upload image:', uploadError);
-          throw uploadError;
-        }
-      }
-
-      // Create plant data
+      // Create plant data (without images first)
       const plantData = {
         ...data,
-        imageUrls: [...imageUrls, ...uploadedImageUrls],
+        imageUrls: [...imageUrls], // Keep existing imageUrls for now
         slug: data.name.toLowerCase().replace(/\s+/g, '-'),
         tags,
         isActive: true,
@@ -143,6 +125,23 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
       try {
         const result = await createPlant(plantData);
         console.log('Plant creation result:', result);
+        
+        // If we have new images, upload them to our cost-effective storage
+        if (images.length > 0) {
+          console.log('Uploading images to cost-effective storage, images count:', images.length);
+          try {
+            const uploadResult = await uploadPlantPhotos(result.id, images);
+            console.log('Images uploaded successfully:', uploadResult);
+          } catch (uploadError) {
+            console.error('Failed to upload images (but plant was created):', uploadError);
+            // Plant was created, just notify about image upload failure
+            toast({
+              title: "Plant created with image upload warning",
+              description: `${data.name} was created but some images failed to upload. You can add them later.`,
+              variant: "destructive",
+            });
+          }
+        }
         
         toast({
           title: "Plant added successfully!",
