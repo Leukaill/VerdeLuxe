@@ -642,17 +642,47 @@ const SecureAdmin = () => {
                                   id="vanessa-image"
                                   type="file"
                                   accept="image/*"
-                                  onChange={(e) => {
+                                  onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
-                                      // Create a URL for the uploaded file
-                                      const imageUrl = URL.createObjectURL(file);
-                                      // Update content with new image URL
-                                      const updatedContent = editingContent.content?.replace(
-                                        /\*\*Image:\*\*\s*.+/,
-                                        `**Image:** ${imageUrl}`
-                                      ) || editingContent.content + `\n\n**Image:** ${imageUrl}`;
-                                      setEditingContent({...editingContent, content: updatedContent});
+                                      const formData = new FormData();
+                                      formData.append('image', file);
+                                      formData.append('type', 'profile');
+                                      
+                                      try {
+                                        const adminAuth = localStorage.getItem('adminAuthenticated');
+                                        const response = await fetch('/api/admin/upload-image', {
+                                          method: 'POST',
+                                          headers: {
+                                            'x-admin-auth': adminAuth || 'true'
+                                          },
+                                          body: formData
+                                        });
+                                        
+                                        if (response.ok) {
+                                          const result = await response.json();
+                                          // Update content with new image URL
+                                          const updatedContent = editingContent.content?.replace(
+                                            /\*\*Image:\*\*\s*.+/,
+                                            `**Image:** ${result.imageUrl}`
+                                          ) || editingContent.content + `\n\n**Image:** ${result.imageUrl}`;
+                                          setEditingContent({...editingContent, content: updatedContent});
+                                          
+                                          toast({
+                                            title: "Success",
+                                            description: "Image uploaded successfully"
+                                          });
+                                        } else {
+                                          throw new Error('Upload failed');
+                                        }
+                                      } catch (error) {
+                                        console.error('Upload failed:', error);
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to upload image",
+                                          variant: "destructive"
+                                        });
+                                      }
                                     }
                                   }}
                                 />
@@ -755,6 +785,73 @@ const SecureAdmin = () => {
                     onChange={(e) => setPlantForm({...plantForm, description: e.target.value})}
                     placeholder="Enter plant description"
                   />
+                </div>
+                <div>
+                  <Label htmlFor="images">Plant Images</Label>
+                  <Input
+                    id="images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        const imageUrls: string[] = [];
+                        
+                        for (const file of files) {
+                          const formData = new FormData();
+                          formData.append('image', file);
+                          formData.append('type', 'plant');
+                          
+                          try {
+                            const adminAuth = localStorage.getItem('adminAuthenticated');
+                            const response = await fetch('/api/admin/upload-image', {
+                              method: 'POST',
+                              headers: {
+                                'x-admin-auth': adminAuth || 'true'
+                              },
+                              body: formData
+                            });
+                            
+                            if (response.ok) {
+                              const result = await response.json();
+                              imageUrls.push(result.imageUrl);
+                            }
+                          } catch (error) {
+                            console.error('Upload failed:', error);
+                          }
+                        }
+                        
+                        setPlantForm({...plantForm, imageUrls: [...plantForm.imageUrls, ...imageUrls]});
+                      }
+                    }}
+                  />
+                  <div className="mt-2 text-sm text-gray-500">
+                    Upload multiple images for this plant
+                  </div>
+                  {plantForm.imageUrls.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {plantForm.imageUrls.map((url, index) => (
+                        <div key={index} className="relative">
+                          <img 
+                            src={url} 
+                            alt={`Plant ${index + 1}`}
+                            className="w-16 h-16 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newUrls = plantForm.imageUrls.filter((_, i) => i !== index);
+                              setPlantForm({...plantForm, imageUrls: newUrls});
+                            }}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

@@ -4,8 +4,44 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { users, plants, categories, orders, orderItems, wishlistItems, reviews, newsletterSubscribers, siteContent } from "../shared/schema";
 import { eq, desc, sql, and, ne } from "drizzle-orm";
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure multer for file uploads
+  const uploadStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadType = req.body.type || 'plant';
+      const uploadDir = `client/public/uploads/${uploadType}s`;
+      
+      // Ensure directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const upload = multer({ 
+    storage: uploadStorage,
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'));
+      }
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+  });
+
   // Admin authentication middleware - now checks client session
   const verifyAdmin = async (req: any, res: any, next: any) => {
     try {
@@ -238,6 +274,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(content);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch content' });
+    }
+  });
+
+  // Image upload endpoint
+  app.post("/api/admin/upload-image", verifyAdmin, upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No image file provided' });
+      }
+
+      const uploadType = req.body.type || 'plant';
+      const imageUrl = `/uploads/${uploadType}s/${req.file.filename}`;
+      
+      res.json({ 
+        success: true, 
+        imageUrl,
+        filename: req.file.filename 
+      });
+    } catch (error) {
+      console.error('Image upload error:', error);
+      res.status(500).json({ error: 'Image upload failed' });
     }
   });
 
