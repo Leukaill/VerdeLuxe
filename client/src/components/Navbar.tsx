@@ -16,6 +16,7 @@ const Navbar = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -157,8 +158,8 @@ const Navbar = () => {
         {/* Dynamic Island Container */}
         <motion.div
           animate={{
-            width: isMenuOpen ? "90vw" : "200px",
-            height: isMenuOpen ? "auto" : "50px",
+            width: isMenuOpen ? "90vw" : isMobileSearchOpen ? "85vw" : "200px",
+            height: isMenuOpen ? "auto" : isMobileSearchOpen ? "120px" : "50px",
           }}
           transition={{ 
             duration: 0.4, 
@@ -198,7 +199,7 @@ const Navbar = () => {
               `,
             }}
             animate={{
-              borderRadius: isMenuOpen ? "24px" : "25px",
+              borderRadius: isMenuOpen ? "24px" : isMobileSearchOpen ? "20px" : "25px",
             }}
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
           >
@@ -232,7 +233,7 @@ const Navbar = () => {
             </div>
             {/* Collapsed State */}
             <AnimatePresence>
-              {!isMenuOpen && (
+              {!isMenuOpen && !isMobileSearchOpen && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -248,11 +249,12 @@ const Navbar = () => {
 
                   {/* Action Icons */}
                   <div className="flex items-center space-x-3">
-                    <Link href="/products">
-                      <button className="text-white/80 hover:text-white transition-colors">
-                        <Search className="w-4 h-4" />
-                      </button>
-                    </Link>
+                    <button
+                      onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+                      className="text-white/80 hover:text-white transition-colors"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
                     
                     <button
                       onClick={() => setIsMenuOpen(true)}
@@ -261,6 +263,93 @@ const Navbar = () => {
                       <Menu className="w-4 h-4" />
                     </button>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Search State */}
+            <AnimatePresence>
+              {isMobileSearchOpen && !isMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  className="p-4"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Search className="text-green-400 w-5 h-5" />
+                      <span className="font-sf font-bold text-sm text-white">Search Plants</span>
+                    </div>
+                    
+                    <button
+                      onClick={() => setIsMobileSearchOpen(false)}
+                      className="text-white/80 hover:text-white transition-colors p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Search Form */}
+                  <form onSubmit={handleSearch} className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search for plants..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-3 pl-10 text-white placeholder-white/60 focus:outline-none transition-all duration-300"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, 
+                            rgba(255, 255, 255, 0.15) 0%,
+                            rgba(255, 255, 255, 0.05) 100%
+                          )
+                        `,
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        boxShadow: `
+                          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                          inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                          0 4px 8px rgba(0, 0, 0, 0.1)
+                        `,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.boxShadow = `
+                          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                          inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                          0 0 0 2px rgba(34, 197, 94, 0.3),
+                          0 4px 12px rgba(0, 0, 0, 0.2)
+                        `;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.boxShadow = `
+                          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                          inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                          0 4px 8px rgba(0, 0, 0, 0.1)
+                        `;
+                      }}
+                      autoFocus
+                    />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+                    
+                    {searchQuery && (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        type="submit"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg text-black font-medium text-sm transition-all duration-300"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(34, 197, 94, 1) 0%, rgba(22, 163, 74, 1) 100%)',
+                          boxShadow: '0 2px 4px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                        }}
+                      >
+                        Go
+                      </motion.button>
+                    )}
+                  </form>
                 </motion.div>
               )}
             </AnimatePresence>
