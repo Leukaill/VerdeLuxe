@@ -427,7 +427,7 @@ const SecureAdmin = () => {
                 <div className="space-y-4">
                   <div className="p-4 border rounded-lg">
                     <h3 className="font-semibold mb-2">Current Admin</h3>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-sm text-gray-600">{localStorage.getItem('adminEmail')}</p>
                     <Badge className="mt-2">Active Admin</Badge>
                   </div>
                   <div className="p-4 border rounded-lg">

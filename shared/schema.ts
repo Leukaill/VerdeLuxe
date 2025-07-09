@@ -163,20 +163,7 @@ export const insertSiteContentSchema = createInsertSchema(siteContent).omit({
   updatedAt: true,
 });
 
-export const adminCredentials = pgTable("admin_credentials", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 128 }).notNull().unique(),
-  email: varchar("email", { length: 255 }).notNull(),
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
-export const insertAdminCredentialsSchema = createInsertSchema(adminCredentials).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -209,5 +196,4 @@ export type InsertNewsletterSubscriber = z.infer<typeof insertNewsletterSubscrib
 export type SiteContent = typeof siteContent.$inferSelect;
 export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
 
-export type AdminCredentials = typeof adminCredentials.$inferSelect;
-export type InsertAdminCredentials = z.infer<typeof insertAdminCredentialsSchema>;
+

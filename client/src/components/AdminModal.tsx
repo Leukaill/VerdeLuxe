@@ -31,7 +31,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
   const checkAdminExists = async () => {
     try {
-      const response = await fetch('/api/admin/check-exists');
+      const response = await fetch('/api/admin/firebase-check-exists');
       const data = await response.json();
       setHasAdmin(data.hasAdmin);
     } catch (error) {
@@ -52,7 +52,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch('/api/admin/firebase-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/create', {
+      const response = await fetch('/api/admin/firebase-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
