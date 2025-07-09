@@ -136,7 +136,7 @@ export const seedFirestoreSimple = async () => {
     }
     
     // Finally, seed admin credentials
-    const adminRef = collection(db, 'admin_credentials');
+    const adminRef = collection(db, 'adminCredentials');
     const existingAdmin = await getDocs(query(adminRef, where('email', '==', 'admin@verdeluxe.com')));
     
     if (existingAdmin.empty) {
