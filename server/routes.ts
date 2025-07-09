@@ -247,6 +247,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all categories
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const allCategories = await db.select().from(categories).orderBy(categories.name);
+      res.json(allCategories);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
   // Get newsletter subscribers
   app.get("/api/admin/newsletters", verifyAdmin, async (req, res) => {
     try {
