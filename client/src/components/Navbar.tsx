@@ -248,12 +248,11 @@ const Navbar = () => {
 
                   {/* Action Icons */}
                   <div className="flex items-center space-x-3">
-                    <button
-                      onClick={() => setIsSearchOpen(!isSearchOpen)}
-                      className="text-white/80 hover:text-white transition-colors"
-                    >
-                      <Search className="w-4 h-4" />
-                    </button>
+                    <Link href="/products">
+                      <button className="text-white/80 hover:text-white transition-colors">
+                        <Search className="w-4 h-4" />
+                      </button>
+                    </Link>
                     
                     <button
                       onClick={() => setIsMenuOpen(true)}
