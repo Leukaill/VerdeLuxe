@@ -107,6 +107,23 @@ Verde Luxe is a premium e-commerce platform for luxury plants featuring 3D visua
 - Firebase configuration via environment variables
 - Production optimizations for both frontend and backend
 
+## Database Configuration
+
+### PostgreSQL Database (Neon)
+- **Host:** ep-round-dawn-a2u068xy.eu-central-1.aws.neon.tech
+- **Database:** neondb
+- **Username:** neondb_owner
+- **Password:** npg_9zsuHtE3NGjI
+- **Port:** 5432
+- **SSL Mode:** require
+- **Connection String:** `postgresql://neondb_owner:npg_9zsuHtE3NGjI@ep-round-dawn-a2u068xy.eu-central-1.aws.neon.tech/neondb?sslmode=require`
+
+### Firebase Configuration
+- **Project ID:** mvp-db-21c9b
+- **Authentication:** Email/Password and Google Sign-in enabled
+- **Firestore:** Used for plant data storage (free tier)
+- **Storage:** Not used (cost optimization)
+
 ## Changelog
 - June 19, 2025. Initial setup
 - July 9, 2025. Enhanced hero section with orbital slideshow featuring 3D-like transitions, floating elements, and dynamic content
@@ -126,6 +143,8 @@ Verde Luxe is a premium e-commerce platform for luxury plants featuring 3D visua
 - July 9, 2025. **Plant Display Issue Fixed**: Resolved issue where plants saved to Firestore weren't appearing on website. Updated FeaturedProducts component to fetch from database instead of static data. Modified plant queries to use client-side filtering instead of complex Firestore queries to avoid index requirements
 - July 9, 2025. **Hybrid Storage Architecture**: Implemented cost-effective hybrid storage system where plant data is stored in Firestore (free tier) and photos are stored in PostgreSQL with local file system to avoid Firebase Storage costs. Created plant_photos table, photo upload API endpoints, and admin photo management interface
 - July 9, 2025. **Hybrid Storage System Complete**: Successfully implemented and tested hybrid storage architecture. Plant data stored in Firestore (free tier), photos stored in PostgreSQL + local file system (no storage costs). Fixed plant creation and photo display issues. System now fully operational with cost-effective photo management, unified image display combining Firestore imageUrls with PostgreSQL photos, and working admin panel for plant management
+- July 9, 2025. **Seed Database Security**: Removed seed database button from main website and restricted it to admin panel only for security. Created comprehensive academic documentation following exact structure provided
+- July 9, 2025. **Database URL Configuration**: Added fallback database URL configuration to prevent deployment errors when DATABASE_URL environment variable is missing. Created deployment setup guide with complete database credentials
 
 ## User Preferences
 
