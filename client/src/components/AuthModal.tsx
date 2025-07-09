@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { localAuth } from '@/lib/localAuth';
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithGitHub } from '@/lib/firebase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -38,7 +38,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       
       if (isSignUp) {
         console.log('Creating new account...');
-        const result = await localAuth.signUp(email, password, name);
+        const result = await signUpWithEmail(email, password, name);
         console.log('Account created successfully:', result);
         setMessage("Account created successfully!");
         setTimeout(() => {
@@ -47,7 +47,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         }, 1500);
       } else {
         console.log('Signing in...');
-        const result = await localAuth.signIn(email, password);
+        const result = await signInWithEmail(email, password);
         console.log('Signed in successfully:', result);
         setMessage("Signed in successfully!");
         setTimeout(() => {
@@ -95,7 +95,41 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   };
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
-    setMessage("Social login not available in demo mode. Please use email/password login.");
+    setIsLoading(true);
+    setMessage('');
+    
+    try {
+      console.log(`Attempting ${provider} login...`);
+      
+      let result;
+      if (provider === 'google') {
+        result = await signInWithGoogle();
+      } else {
+        result = await signInWithGitHub();
+      }
+      
+      console.log(`${provider} login successful:`, result);
+      setMessage("Signed in successfully!");
+      setTimeout(() => {
+        onClose();
+        resetForm();
+      }, 1500);
+    } catch (error: any) {
+      console.error(`${provider} login error:`, error);
+      let errorMessage = `${provider} login failed. Please try again.`;
+      
+      if (error?.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Login cancelled. Please try again.";
+      } else if (error?.code === 'auth/popup-blocked') {
+        errorMessage = "Popup blocked. Please allow popups and try again.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setMessage(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
