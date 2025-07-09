@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { auth, createUserDocument } from '@/lib/firebase';
+import { localAuth } from '@/lib/localAuth';
 
 interface SimpleUser {
   id: string;
@@ -35,18 +36,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
-      if (firebaseUser) {
-        // User is signed in, create user document if needed
-        await createUserDocument(firebaseUser);
-        const userData: SimpleUser = {
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          name: firebaseUser.displayName || firebaseUser.email || '',
-          createdAt: new Date().toISOString(),
-        };
-        setUser(userData);
-      } else {
-        // User is signed out
+      try {
+        if (firebaseUser) {
+          // User is signed in, create user document if needed
+          await createUserDocument(firebaseUser);
+          const userData: SimpleUser = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || firebaseUser.email || '',
+            createdAt: new Date().toISOString(),
+          };
+          setUser(userData);
+        } else {
+          // User is signed out
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth error:', error);
         setUser(null);
       }
       setLoading(false);
