@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Database } from 'lucide-react';
-import { seedFirestoreData } from '@/lib/firebase';
+import { seedFirestoreSimple } from '@/lib/seedFirestore';
 import { useToast } from '@/hooks/use-toast';
 
 const SeedButton = () => {
@@ -11,7 +11,7 @@ const SeedButton = () => {
   const handleSeed = async () => {
     setSeeding(true);
     try {
-      await seedFirestoreData();
+      await seedFirestoreSimple();
       toast({
         title: "Success",
         description: "Firestore database seeded successfully!"

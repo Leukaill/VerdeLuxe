@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { getPlants, getOrders, getCategories, seedFirestoreData } from '@/lib/firebase';
+import { getPlants, getOrders, getCategories } from '@/lib/firebase';
+import { seedFirestoreSimple } from '@/lib/seedFirestore';
 import { useToast } from '@/hooks/use-toast';
 import PlantForm from '@/components/admin/PlantForm';
 import OrderManagement from '@/components/admin/OrderManagement';
@@ -249,7 +250,7 @@ const Admin = () => {
                     onClick={async () => {
                       setSeeding(true);
                       try {
-                        await seedFirestoreData();
+                        await seedFirestoreSimple();
                         toast({
                           title: "Success",
                           description: "Firestore database has been seeded successfully!"

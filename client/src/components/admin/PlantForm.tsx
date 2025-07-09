@@ -51,6 +51,7 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
     formState: { errors },
     setValue,
     watch,
+    control,
   } = useForm<PlantForm>({
     resolver: zodResolver(plantSchema),
     defaultValues: {
@@ -67,6 +68,8 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
       difficultyLevel: plant?.difficultyLevel || '',
     },
   });
+
+  const selectedCategory = watch('categoryId');
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -213,7 +216,10 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
 
                   <div>
                     <Label htmlFor="categoryId">Category</Label>
-                    <Select onValueChange={(value) => setValue('categoryId', value)}>
+                    <Select 
+                      value={selectedCategory} 
+                      onValueChange={(value) => setValue('categoryId', value)}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
