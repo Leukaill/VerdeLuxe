@@ -22,15 +22,16 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [adminPassword, setAdminPassword] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasAdmin, setHasAdmin] = useState<boolean | null>(null);
   const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
 
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen) {
       checkAdminExists();
     }
-  }, [isOpen, user]);
+  }, [isOpen]);
 
   const checkAdminExists = async () => {
     try {
@@ -44,10 +45,10 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   };
 
   const handleAdminLogin = async () => {
-    if (!user || !adminPassword.trim()) {
+    if (!adminEmail.trim() || !adminPassword.trim()) {
       toast({
         title: "Error",
-        description: "Please enter admin password",
+        description: "Please enter admin email and password",
         variant: "destructive"
       });
       return;
@@ -61,16 +62,12 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          userId: user.id,
+          email: adminEmail,
           password: adminPassword 
         })
       });
 
       if (response.ok) {
-        // Update user as admin in Firestore
-        const userRef = doc(db, 'users', user.id);
-        await setDoc(userRef, { isAdmin: true }, { merge: true });
-
         toast({
           title: "Success",
           description: "Admin access granted"
@@ -97,7 +94,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   };
 
   const handleCreateAdmin = async () => {
-    if (!user || !newAdminPassword.trim() || !confirmPassword.trim()) {
+    if (!adminEmail.trim() || !newAdminPassword.trim() || !confirmPassword.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -132,17 +129,12 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          userId: user.id,
-          email: user.email,
+          email: adminEmail,
           password: newAdminPassword 
         })
       });
 
       if (response.ok) {
-        // Update user as admin in Firestore
-        const userRef = doc(db, 'users', user.id);
-        await setDoc(userRef, { isAdmin: true }, { merge: true });
-
         toast({
           title: "Success",
           description: "Admin account created successfully"
@@ -174,6 +166,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
     setAdminPassword('');
     setNewAdminPassword('');
     setConfirmPassword('');
+    setAdminEmail('');
     setIsCreatingAdmin(false);
   };
 
@@ -207,6 +200,12 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
             </CardHeader>
             <CardContent className="space-y-4">
               <Input
+                type="email"
+                placeholder="Admin email"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+              />
+              <Input
                 type="password"
                 placeholder="Admin password"
                 value={adminPassword}
@@ -215,7 +214,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               />
               <Button 
                 onClick={handleAdminLogin}
-                disabled={isLoading || !adminPassword.trim()}
+                disabled={isLoading || !adminPassword.trim() || !adminEmail.trim()}
                 className="w-full bg-forest-500 hover:bg-forest-600"
               >
                 {isLoading ? 'Authenticating...' : 'Access Admin Panel'}
@@ -237,6 +236,12 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <Input
+                  type="email"
+                  placeholder="Admin email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                />
+                <Input
                   type="password"
                   placeholder="Create admin password (min 8 characters)"
                   value={newAdminPassword}
@@ -252,7 +257,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               </div>
               <Button 
                 onClick={handleCreateAdmin}
-                disabled={isLoading || !newAdminPassword.trim() || !confirmPassword.trim()}
+                disabled={isLoading || !newAdminPassword.trim() || !confirmPassword.trim() || !adminEmail.trim()}
                 className="w-full bg-forest-500 hover:bg-forest-600"
               >
                 {isLoading ? 'Creating Admin...' : 'Create Admin Account'}

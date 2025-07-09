@@ -212,13 +212,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get('/api/admin/check-exists', async (req, res) => {
     try {
-      // Check if any real Firebase admin exists (not seeded admin)
-      const realAdminUsers = await db.select().from(users)
-        .where(and(
-          eq(users.isAdmin, true),
-          ne(users.firebaseUid, 'admin-verde-luxe-2025') // Exclude seeded admin
-        ));
-      const hasAdmin = realAdminUsers.length > 0;
+      // Check if any admin credentials exist
+      const adminCreds = await db.select().from(adminCredentials);
+      const hasAdmin = adminCreds.length > 0;
       res.json({ hasAdmin });
     } catch (error) {
       console.error('Error checking admin existence:', error);
@@ -228,37 +224,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/create', async (req, res) => {
     try {
-      const { userId, email, password } = req.body;
+      const { email, password } = req.body;
 
       // Check if real admin already exists (not seeded admin)
-      const realAdminUsers = await db.select().from(users)
-        .where(and(
-          eq(users.isAdmin, true),
-          ne(users.firebaseUid, 'admin-verde-luxe-2025') // Exclude seeded admin
-        ));
-      if (realAdminUsers.length > 0) {
+      const existingAdmins = await db.select().from(adminCredentials);
+      if (existingAdmins.length > 0) {
         return res.status(400).json({ message: 'Admin account already exists' });
       }
+
+      // Generate a unique admin ID
+      const adminId = `admin-${Date.now()}`;
 
       // Create admin credentials
       await db.insert(adminCredentials)
         .values({
-          userId,
+          userId: adminId,
           email,
           passwordHash: password // In production, hash the password
-        })
-        .onConflictDoUpdate({
-          target: adminCredentials.userId,
-          set: {
-            passwordHash: password,
-            updatedAt: new Date()
-          }
         });
 
-      // Update user as admin
-      await db.update(users)
-        .set({ isAdmin: true })
-        .where(eq(users.firebaseUid, userId));
+      // Create admin user record
+      await db.insert(users)
+        .values({
+          firebaseUid: adminId,
+          email,
+          displayName: 'Admin',
+          isAdmin: true
+        });
 
       res.json({ success: true, message: 'Admin account created successfully' });
     } catch (error) {
@@ -269,22 +261,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/authenticate', async (req, res) => {
     try {
-      const { userId, password } = req.body;
+      const { email, password } = req.body;
 
-      // Check admin credentials
+      // Check admin credentials by email
       const adminCred = await db.select()
         .from(adminCredentials)
-        .where(eq(adminCredentials.userId, userId))
+        .where(eq(adminCredentials.email, email))
         .limit(1);
 
       if (adminCred.length === 0 || adminCred[0].passwordHash !== password) {
         return res.status(401).json({ message: 'Invalid admin credentials' });
       }
-
-      // Update user as admin if not already
-      await db.update(users)
-        .set({ isAdmin: true })
-        .where(eq(users.firebaseUid, userId));
 
       res.json({ success: true, message: 'Admin authenticated successfully' });
     } catch (error) {
