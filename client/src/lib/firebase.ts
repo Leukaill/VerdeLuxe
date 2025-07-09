@@ -180,11 +180,34 @@ export const getPlantById = async (plantId: string) => {
 };
 
 export const createPlant = async (plantData: any) => {
-  const plantsRef = collection(db, 'plants');
-  return await addDoc(plantsRef, {
-    ...plantData,
-    createdAt: new Date().toISOString(),
-  });
+  try {
+    console.log('Creating plant with data:', plantData);
+    const plantsRef = collection(db, 'plants');
+    console.log('Plants collection reference:', plantsRef);
+    
+    const plantToCreate = {
+      ...plantData,
+      createdAt: new Date().toISOString(),
+      isActive: true,
+      slug: plantData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+    };
+    
+    console.log('Final plant data to create:', plantToCreate);
+    
+    const docRef = await addDoc(plantsRef, plantToCreate);
+    console.log('Plant created successfully with ID:', docRef.id);
+    
+    return docRef;
+  } catch (error) {
+    console.error('Error creating plant:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    throw error;
+  }
 };
 
 export const updatePlant = async (plantId: string, plantData: any) => {
@@ -298,9 +321,28 @@ export const removeFromWishlist = async (wishlistItemId: string) => {
 
 // File upload function
 export const uploadFile = async (file: File, path: string) => {
-  const fileRef = ref(storage, path);
-  const snapshot = await uploadBytes(fileRef, file);
-  return await getDownloadURL(snapshot.ref);
+  try {
+    console.log('Uploading file:', file.name, 'to path:', path);
+    const fileRef = ref(storage, path);
+    console.log('File reference created:', fileRef);
+    
+    const snapshot = await uploadBytes(fileRef, file);
+    console.log('File uploaded successfully, snapshot:', snapshot);
+    
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    console.log('Download URL obtained:', downloadUrl);
+    
+    return downloadUrl;
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    throw error;
+  }
 };
 
 // Auth state observer

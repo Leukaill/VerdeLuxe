@@ -102,6 +102,7 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
     try {
       // Validate required fields
       if (!data.categoryId) {
+        console.log('Category validation failed:', data.categoryId);
         toast({
           title: "Error",
           description: "Please select a category",
@@ -110,14 +111,28 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
         return;
       }
 
-      // Upload images
+      console.log('Starting image upload process, images count:', images.length);
+      
+      // Upload images - skip this for now to test basic plant creation
       const uploadedImageUrls = [];
       
+      // Temporarily skip image upload to test basic functionality
+      console.log('Skipping image upload for testing purposes');
+      
+      /* 
       for (const image of images) {
+        console.log('Uploading image:', image.name);
         const imagePath = `plants/${Date.now()}-${image.name}`;
-        const imageUrl = await uploadFile(image, imagePath);
-        uploadedImageUrls.push(imageUrl);
+        try {
+          const imageUrl = await uploadFile(image, imagePath);
+          console.log('Image uploaded successfully:', imageUrl);
+          uploadedImageUrls.push(imageUrl);
+        } catch (uploadError) {
+          console.error('Failed to upload image:', uploadError);
+          throw uploadError;
+        }
       }
+      */
 
       // Create plant data
       const plantData = {
@@ -129,19 +144,27 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
       };
 
       console.log('Creating plant with data:', plantData);
-      await createPlant(plantData);
       
-      toast({
-        title: "Plant added successfully!",
-        description: `${data.name} has been added to the inventory.`,
-      });
+      try {
+        const result = await createPlant(plantData);
+        console.log('Plant creation result:', result);
+        
+        toast({
+          title: "Plant added successfully!",
+          description: `${data.name} has been added to the inventory.`,
+        });
+        
+        onSubmit();
+      } catch (plantError) {
+        console.error('Failed to create plant:', plantError);
+        throw plantError;
+      }
       
-      onSubmit();
     } catch (error) {
-      console.error('Failed to create plant:', error);
+      console.error('Form submission failed:', error);
       toast({
         title: "Error",
-        description: "Failed to create plant. Please try again.",
+        description: `Failed to create plant: ${error.message}`,
         variant: "destructive",
       });
     } finally {
