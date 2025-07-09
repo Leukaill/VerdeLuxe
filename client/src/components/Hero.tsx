@@ -22,9 +22,9 @@ const Hero = () => {
     },
     {
       id: 3,
-      image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      title: "Garden Paradise",
-      subtitle: "Transform your space into a sanctuary"
+      image: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      title: "Exotic Collection",
+      subtitle: "Rare and luxurious plants for discerning collectors"
     }
   ];
 
