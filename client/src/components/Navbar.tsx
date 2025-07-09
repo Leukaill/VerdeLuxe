@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import AuthModal from './AuthModal';
 
 const Navbar = () => {
@@ -43,7 +44,8 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 w-full z-50 glass">
+      {/* Desktop Navbar */}
+      <nav className="fixed top-0 w-full z-50 glass hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -146,86 +148,196 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-forest-600"
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
           </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 glass-dark rounded-b-lg">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="block px-3 py-2 rounded-md text-forest-600 hover:text-gold-500"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-                
-                <div className="flex items-center justify-around pt-4 border-t border-white/20">
-                  <Button variant="ghost" size="icon" className="text-forest-600">
-                    <Search className="h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-forest-600">
-                    <Heart className="h-5 w-5" />
-                  </Button>
-                  <Link href="/cart">
-                    <Button variant="ghost" size="icon" className="relative text-forest-600">
-                      <ShoppingCart className="h-5 w-5" />
-                      {totalItems > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-gold-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                          {totalItems}
-                        </span>
-                      )}
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="pt-4">
-                  {user ? (
-                    <div className="space-y-2">
-                      <Link href="/profile">
-                        <Button variant="ghost" className="w-full text-forest-600">
-                          {user.name || 'Profile'}
-                        </Button>
-                      </Link>
-                      <Button
-                        onClick={handleSignOut}
-                        variant="outline"
-                        className="w-full text-forest-600"
-                      >
-                        Sign Out
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        setIsAuthModalOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full bg-forest-500 text-white"
-                    >
-                      Sign In
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </nav>
+
+      {/* Mobile Dynamic Island Navbar */}
+      <div className="md:hidden fixed top-4 left-1/2 -translate-x-1/2 z-50">
+        {/* Dynamic Island Container */}
+        <motion.div
+          animate={{
+            width: isMenuOpen ? "90vw" : "200px",
+            height: isMenuOpen ? "auto" : "50px",
+          }}
+          transition={{ 
+            duration: 0.4, 
+            ease: [0.4, 0, 0.2, 1],
+            type: "spring",
+            stiffness: 300,
+            damping: 30
+          }}
+          className="relative"
+        >
+          {/* Main Dynamic Island */}
+          <motion.div
+            className="bg-black/90 backdrop-blur-xl rounded-full shadow-xl border border-white/10"
+            animate={{
+              borderRadius: isMenuOpen ? "24px" : "25px",
+            }}
+            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          >
+            {/* Collapsed State */}
+            <AnimatePresence>
+              {!isMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-between px-4 py-3"
+                >
+                  {/* Logo */}
+                  <Link href="/" className="flex items-center space-x-2">
+                    <Leaf className="text-green-400 w-5 h-5" />
+                    <span className="font-sf font-bold text-sm text-white">Verde</span>
+                  </Link>
+
+                  {/* Action Icons */}
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => setIsSearchOpen(!isSearchOpen)}
+                      className="text-white/80 hover:text-white transition-colors"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                    
+                    <button
+                      onClick={() => setIsMenuOpen(true)}
+                      className="text-white/80 hover:text-white transition-colors"
+                    >
+                      <Menu className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Expanded State */}
+            <AnimatePresence>
+              {isMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  className="p-6"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <Link href="/" className="flex items-center space-x-2">
+                      <Leaf className="text-green-400 w-6 h-6" />
+                      <span className="font-sf font-bold text-lg text-white">Verde Luxe</span>
+                    </Link>
+                    
+                    <button
+                      onClick={() => setIsMenuOpen(false)}
+                      className="text-white/80 hover:text-white transition-colors p-2"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="mb-6">
+                    <form onSubmit={handleSearch} className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search plants..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 pl-10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                      />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+                    </form>
+                  </div>
+
+                  {/* Navigation Links */}
+                  <div className="space-y-1 mb-6">
+                    {navigation.map((item, index) => (
+                      <motion.div
+                        key={item.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1, duration: 0.3 }}
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={`block px-4 py-3 rounded-xl text-white/90 hover:text-white hover:bg-white/10 transition-all ${
+                            location === item.href ? 'bg-green-400/20 text-green-400' : ''
+                          }`}
+                        >
+                          {item.name}
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-around py-4 border-t border-white/20 mb-4">
+                    <button className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-colors">
+                      <Heart className="w-5 h-5" />
+                      <span className="text-xs">Wishlist</span>
+                    </button>
+                    
+                    <Link href="/cart" onClick={() => setIsMenuOpen(false)}>
+                      <button className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-colors relative">
+                        <ShoppingCart className="w-5 h-5" />
+                        <span className="text-xs">Cart</span>
+                        {totalItems > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-green-400 text-black text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                            {totalItems}
+                          </span>
+                        )}
+                      </button>
+                    </Link>
+                    
+                    <Link href="/3d-studio" onClick={() => setIsMenuOpen(false)}>
+                      <button className="flex flex-col items-center space-y-1 text-white/80 hover:text-white transition-colors">
+                        <div className="w-5 h-5 border border-current rounded"></div>
+                        <span className="text-xs">3D View</span>
+                      </button>
+                    </Link>
+                  </div>
+
+                  {/* User Actions */}
+                  <div className="pt-2">
+                    {user ? (
+                      <div className="space-y-3">
+                        <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
+                          <button className="w-full text-left px-4 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">
+                            👋 {user.name || 'Profile'}
+                          </button>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            handleSignOut();
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-3 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setIsAuthModalOpen(true);
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full px-4 py-3 rounded-xl bg-green-400 text-black font-semibold hover:bg-green-300 transition-colors"
+                      >
+                        Sign In
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
+      </div>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
