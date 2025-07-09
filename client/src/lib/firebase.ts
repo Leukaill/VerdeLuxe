@@ -103,10 +103,23 @@ export const createUserDocument = async (user: User, displayName?: string) => {
 export const getCategories = async () => {
   try {
     console.log('Fetching categories from Firestore...');
+    console.log('Firebase config check:', {
+      projectId: db.app.options.projectId,
+      authDomain: db.app.options.authDomain
+    });
+    
     const categoriesRef = collection(db, 'categories');
+    console.log('Categories collection reference:', categoriesRef);
+    
     const snapshot = await getDocs(categoriesRef);
     console.log('Categories snapshot:', snapshot);
     console.log('Categories docs count:', snapshot.docs.length);
+    console.log('Categories empty?:', snapshot.empty);
+    
+    if (snapshot.empty) {
+      console.log('No categories found in Firestore');
+      return [];
+    }
     
     const categories = snapshot.docs.map(doc => {
       const data = { id: doc.id, ...doc.data() };
@@ -118,6 +131,12 @@ export const getCategories = async () => {
     return categories;
   } catch (error) {
     console.error('Error fetching categories:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     throw error;
   }
 };

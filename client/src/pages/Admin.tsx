@@ -41,16 +41,19 @@ const Admin = () => {
   const checkFirestoreStatus = async () => {
     try {
       // Test Firestore connection by trying to fetch categories
+      console.log('Testing Firestore connection...');
       const categories = await getCategories();
+      console.log('Firestore connection test successful, categories:', categories);
       setFirestoreStatus({ 
         connected: true, 
         message: 'Firestore connection successful',
         loading: false 
       });
     } catch (error) {
+      console.error('Firestore connection test failed:', error);
       setFirestoreStatus({ 
         connected: false, 
-        message: 'Firestore connection failed', 
+        message: `Firestore connection failed: ${error.message}`, 
         loading: false 
       });
     }
@@ -60,11 +63,37 @@ const Admin = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [plantsData, ordersData, categoriesData] = await Promise.all([
-          getPlants(),
-          getOrders(),
-          getCategories()
-        ]);
+        console.log('Starting admin data fetch...');
+        
+        // Fetch data individually to see which one fails
+        let plantsData = [];
+        let ordersData = [];
+        let categoriesData = [];
+        
+        try {
+          console.log('Fetching plants...');
+          plantsData = await getPlants();
+          console.log('Plants fetched:', plantsData.length);
+        } catch (error) {
+          console.error('Failed to fetch plants:', error);
+        }
+        
+        try {
+          console.log('Fetching orders...');
+          ordersData = await getOrders();
+          console.log('Orders fetched:', ordersData.length);
+        } catch (error) {
+          console.error('Failed to fetch orders:', error);
+        }
+        
+        try {
+          console.log('Fetching categories...');
+          categoriesData = await getCategories();
+          console.log('Categories fetched:', categoriesData.length, categoriesData);
+        } catch (error) {
+          console.error('Failed to fetch categories:', error);
+        }
+        
         console.log('Admin data fetched:', {
           plants: plantsData.length,
           orders: ordersData.length,
@@ -72,10 +101,6 @@ const Admin = () => {
           categoriesData: categoriesData
         });
         
-        // Additional debugging for categories
-        console.log('Categories fetch result:', categoriesData);
-        console.log('Categories type:', typeof categoriesData);
-        console.log('Categories isArray:', Array.isArray(categoriesData));
         setPlants(plantsData);
         setOrders(ordersData);
         setCategories(categoriesData);
