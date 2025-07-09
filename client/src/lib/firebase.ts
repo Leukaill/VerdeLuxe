@@ -199,32 +199,13 @@ export const getPlants = async (categoryId?: string, featured?: boolean) => {
       return dateB.getTime() - dateA.getTime();
     });
     
-    // Fetch photos for each plant from PostgreSQL
-    console.log('Fetching photos for plants...');
-    const plantsWithPhotos = await Promise.all(
-      filteredPlants.map(async (plant) => {
-        try {
-          const photosResponse = await fetch(`/api/plants/${plant.id}/photos`);
-          const photos = photosResponse.ok ? await photosResponse.json() : [];
-          
-          // Convert PostgreSQL photos to imageUrls format for compatibility
-          const imageUrls = photos.map((photo: any) => photo.url);
-          
-          return {
-            ...plant,
-            imageUrls,
-            photos // Keep the full photo objects for admin use
-          };
-        } catch (error) {
-          console.error(`Error fetching photos for plant ${plant.id}:`, error);
-          return {
-            ...plant,
-            imageUrls: [],
-            photos: []
-          };
-        }
-      })
-    );
+    // For now, return plants without fetching photos to avoid loading issues
+    // Photos can be loaded separately when needed
+    const plantsWithPhotos = filteredPlants.map(plant => ({
+      ...plant,
+      imageUrls: plant.imageUrls || [], // Keep existing imageUrls if present
+      photos: [] // Will be loaded separately when needed
+    }));
     
     console.log('Final plants result with photos:', plantsWithPhotos);
     return plantsWithPhotos;
@@ -833,6 +814,91 @@ Today, Verde Luxe reflects Vanessa's vision: a place where technology meets natu
     
   } catch (error) {
     console.error('Error seeding Firestore database:', error);
+    throw error;
+  }
+};
+
+// Hybrid Photo Upload Functions (Plant data in Firestore, Photos in PostgreSQL)
+export const uploadPlantPhotos = async (plantId: string, files: File[]) => {
+  try {
+    console.log(`Uploading ${files.length} photos for plant ${plantId}`);
+    
+    const formData = new FormData();
+    files.forEach((file, index) => {
+      formData.append('photos', file);
+    });
+    
+    const response = await fetch(`/api/plants/${plantId}/photos`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Photo upload failed: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('Photos uploaded successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('Error uploading photos:', error);
+    throw error;
+  }
+};
+
+export const getPlantPhotos = async (plantId: string) => {
+  try {
+    const response = await fetch(`/api/plants/${plantId}/photos`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch photos: ${response.statusText}`);
+    }
+    
+    const photos = await response.json();
+    return photos;
+  } catch (error) {
+    console.error('Error fetching photos:', error);
+    throw error;
+  }
+};
+
+export const deletePlantPhoto = async (photoId: number) => {
+  try {
+    const response = await fetch(`/api/photos/${photoId}`, {
+      method: 'DELETE',
+      headers: {
+        'x-admin-auth': localStorage.getItem('adminAuthenticated') || 'true'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete photo: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    throw error;
+  }
+};
+
+export const setPrimaryPlantPhoto = async (plantId: string, photoId: number) => {
+  try {
+    const response = await fetch(`/api/plants/${plantId}/photos/${photoId}/primary`, {
+      method: 'PATCH',
+      headers: {
+        'x-admin-auth': localStorage.getItem('adminAuthenticated') || 'true'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to set primary photo: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error setting primary photo:', error);
     throw error;
   }
 };
