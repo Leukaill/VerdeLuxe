@@ -151,21 +151,59 @@ export const createCategory = async (categoryData: any) => {
 
 // Plants functions
 export const getPlants = async (categoryId?: string, featured?: boolean) => {
-  const plantsRef = collection(db, 'plants');
-  let q = query(plantsRef, where('isActive', '==', true));
-  
-  if (categoryId) {
-    q = query(q, where('categoryId', '==', categoryId));
+  try {
+    console.log('Fetching plants from Firestore...');
+    console.log('Parameters:', { categoryId, featured });
+    
+    const plantsRef = collection(db, 'plants');
+    console.log('Plants collection reference:', plantsRef);
+    
+    // Start with a basic query to check if there are any plants at all
+    console.log('Fetching all plants first...');
+    const allPlantsSnapshot = await getDocs(plantsRef);
+    console.log('All plants count:', allPlantsSnapshot.docs.length);
+    
+    if (allPlantsSnapshot.empty) {
+      console.log('No plants found in Firestore at all');
+      return [];
+    }
+    
+    // Log all plants for debugging
+    allPlantsSnapshot.docs.forEach(doc => {
+      console.log('Plant found:', doc.id, doc.data());
+    });
+    
+    // Now apply filters
+    let q = query(plantsRef, where('isActive', '==', true));
+    
+    if (categoryId) {
+      q = query(q, where('categoryId', '==', categoryId));
+    }
+    
+    if (featured) {
+      q = query(q, where('featured', '==', true));
+    }
+    
+    q = query(q, orderBy('createdAt', 'desc'));
+    
+    console.log('Executing filtered query...');
+    const snapshot = await getDocs(q);
+    console.log('Filtered plants count:', snapshot.docs.length);
+    
+    const plants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('Final plants result:', plants);
+    
+    return plants;
+  } catch (error) {
+    console.error('Error fetching plants:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    throw error;
   }
-  
-  if (featured) {
-    q = query(q, where('featured', '==', true));
-  }
-  
-  q = query(q, orderBy('createdAt', 'desc'));
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 export const getPlantById = async (plantId: string) => {

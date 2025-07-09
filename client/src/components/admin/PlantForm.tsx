@@ -113,13 +113,9 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
 
       console.log('Starting image upload process, images count:', images.length);
       
-      // Upload images - skip this for now to test basic plant creation
+      // Upload images
       const uploadedImageUrls = [];
       
-      // Temporarily skip image upload to test basic functionality
-      console.log('Skipping image upload for testing purposes');
-      
-      /* 
       for (const image of images) {
         console.log('Uploading image:', image.name);
         const imagePath = `plants/${Date.now()}-${image.name}`;
@@ -132,7 +128,6 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
           throw uploadError;
         }
       }
-      */
 
       // Create plant data
       const plantData = {
