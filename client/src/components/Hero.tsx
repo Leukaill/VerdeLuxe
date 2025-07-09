@@ -10,19 +10,19 @@ const Hero = () => {
   const slides = [
     {
       id: 1,
-      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080",
+      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
       title: "Tropical Paradise",
       subtitle: "Lush tropical plants for your home"
     },
     {
       id: 2,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080",
+      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
       title: "Modern Minimalist",
       subtitle: "Clean lines and elegant greenery"
     },
     {
       id: 3,
-      image: "https://images.unsplash.com/photo-1493663284031-b7e3aaa4cab7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080",
+      image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
       title: "Garden Paradise",
       subtitle: "Transform your space into a sanctuary"
     }
@@ -37,22 +37,23 @@ const Hero = () => {
   }, [slides.length]);
 
   return (
-    <section className="relative pt-20 pb-16 overflow-hidden">
+    <section className="relative h-screen overflow-hidden">
       {/* Orbital Slideshow Background */}
       <div className="absolute inset-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0, scale: 1.1, rotateZ: 5 }}
-            animate={{ opacity: 1, scale: 1, rotateZ: 0 }}
-            exit={{ opacity: 0, scale: 0.9, rotateZ: -5 }}
-            transition={{ duration: 1, ease: "easeInOut" }}
-            className="absolute inset-0 parallax-bg"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
+            className="absolute inset-0 will-change-transform"
             style={{
               backgroundImage: `url(${slides[currentSlide].image})`,
               backgroundPosition: 'center',
               backgroundSize: 'cover',
-              backgroundRepeat: 'no-repeat'
+              backgroundRepeat: 'no-repeat',
+              transform: 'translateZ(0)', // Force hardware acceleration
             }}
           />
         </AnimatePresence>
@@ -61,33 +62,47 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-forest-700/80 to-forest-500/60" />
         
         {/* Floating Elements */}
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
           {slides.map((slide, index) => {
             const isActive = index === currentSlide;
-            const offset = (index - currentSlide) * 120;
+            const position = (index - currentSlide + slides.length) % slides.length;
+            const angle = (position * 120) - 60; // -60, 60, 180 degrees
+            const radius = 200;
+            const x = Math.cos((angle * Math.PI) / 180) * radius;
+            const y = Math.sin((angle * Math.PI) / 180) * radius * 0.3;
             
             return (
               <motion.div
-                key={slide.id}
-                initial={{ opacity: 0, y: 100 }}
+                key={`${slide.id}-${currentSlide}`}
+                initial={{ opacity: 0, scale: 0.5 }}
                 animate={{
-                  opacity: isActive ? 0.3 : 0.1,
-                  y: 0,
-                  x: offset,
-                  scale: isActive ? 1 : 0.8,
-                  rotateY: offset * 0.5,
+                  opacity: isActive ? 0.4 : 0.2,
+                  scale: isActive ? 1 : 0.7,
+                  x: x,
+                  y: y,
+                  rotateY: angle * 0.3,
                 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-                className="absolute right-10 top-1/2 -translate-y-1/2 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl"
+                transition={{ 
+                  duration: 1, 
+                  ease: [0.4, 0, 0.2, 1],
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15
+                }}
+                className="absolute right-1/2 top-1/2 w-24 h-36 rounded-xl overflow-hidden shadow-xl will-change-transform"
                 style={{
-                  background: `linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))`,
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.2)'
+                  background: `linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))`,
+                  backdropFilter: 'blur(15px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  transform: 'translateZ(0)', // Force hardware acceleration
                 }}
               >
                 <div
-                  className="w-full h-full bg-cover bg-center opacity-80"
-                  style={{ backgroundImage: `url(${slide.image})` }}
+                  className="w-full h-full bg-cover bg-center"
+                  style={{ 
+                    backgroundImage: `url(${slide.image})`,
+                    transform: 'translateZ(0)',
+                  }}
                 />
               </motion.div>
             );
@@ -96,7 +111,7 @@ const Hero = () => {
       </div>
 
       {/* Slide Navigation Dots */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
+      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
         {slides.map((_, index) => (
           <button
             key={index}
@@ -109,9 +124,27 @@ const Hero = () => {
           />
         ))}
       </div>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center text-white/80"
+      >
+        <span className="text-sm font-medium mb-2">Scroll to explore</span>
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
+        </svg>
+      </motion.div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="relative h-full flex items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 items-center w-full">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -121,10 +154,10 @@ const Hero = () => {
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide}
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 50 }}
-                transition={{ duration: 0.5 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
               >
                 <h1 className="font-sf text-5xl lg:text-6xl font-bold leading-tight">
                   {slides[currentSlide].title}{' '}
@@ -165,10 +198,10 @@ const Hero = () => {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentSlide}
-                    initial={{ opacity: 0, scale: 0.8 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.2 }}
-                    transition={{ duration: 0.4 }}
+                    exit={{ opacity: 0, scale: 1.1 }}
+                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                     className="flex items-center space-x-4"
                   >
                     <img
