@@ -306,7 +306,18 @@ export const createAdminCredentials = async (email: string, password: string) =>
 
 export const verifyAdminCredentials = async (email: string, password: string) => {
   try {
+    console.log('Verifying admin credentials for:', email);
     const credentialsRef = collection(db, 'adminCredentials');
+    
+    // First, let's check what's in the collection
+    const allSnapshot = await getDocs(credentialsRef);
+    console.log('All admin credentials in collection:', allSnapshot.docs.map(doc => ({
+      id: doc.id,
+      email: doc.data().email,
+      hasPassword: !!doc.data().password,
+      isActive: doc.data().isActive
+    })));
+    
     const q = query(
       credentialsRef, 
       where('email', '==', email),
@@ -315,12 +326,21 @@ export const verifyAdminCredentials = async (email: string, password: string) =>
     );
     
     const snapshot = await getDocs(q);
+    console.log('Query result snapshot empty:', snapshot.empty);
     
     if (snapshot.empty) {
+      // Let's also check if the email exists but with wrong password
+      const emailQuery = query(credentialsRef, where('email', '==', email));
+      const emailSnapshot = await getDocs(emailQuery);
+      console.log('Email exists in collection:', !emailSnapshot.empty);
+      if (!emailSnapshot.empty) {
+        console.log('Existing email data:', emailSnapshot.docs[0].data());
+      }
       return null;
     }
     
     const adminDoc = snapshot.docs[0];
+    console.log('Admin login successful for:', email);
     return {
       id: adminDoc.id,
       ...adminDoc.data()
@@ -337,6 +357,7 @@ export const checkAdminExists = async () => {
     const q = query(credentialsRef, where('isActive', '==', true));
     const snapshot = await getDocs(q);
     
+    console.log('Admin exists check - found', snapshot.docs.length, 'active admin(s)');
     return !snapshot.empty;
   } catch (error) {
     console.error('Error checking admin existence:', error);
