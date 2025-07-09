@@ -123,6 +123,7 @@ Verde Luxe is a premium e-commerce platform for luxury plants featuring 3D visua
 - July 9, 2025. **Migration Complete**: Successfully migrated project from Replit Agent to Replit environment. PostgreSQL database created and connected, server running on port 5000, Firebase integration verified and working with project ID mvp-db-21c9b
 - July 9, 2025. **Database Status Monitoring**: Added comprehensive database connection status indicators to admin panel showing real-time PostgreSQL and Firestore connection status with refresh capability
 - July 9, 2025. **Database Status Indicator**: Added comprehensive database connection status monitoring in admin panel showing both PostgreSQL and Firestore connection status with real-time refresh capability
+- July 9, 2025. **Plant Display Issue Fixed**: Resolved issue where plants saved to Firestore weren't appearing on website. Updated FeaturedProducts component to fetch from database instead of static data. Modified plant queries to use client-side filtering instead of complex Firestore queries to avoid index requirements
 
 ## User Preferences
 

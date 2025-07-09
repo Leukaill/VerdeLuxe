@@ -173,27 +173,34 @@ export const getPlants = async (categoryId?: string, featured?: boolean) => {
       console.log('Plant found:', doc.id, doc.data());
     });
     
-    // Now apply filters
-    let q = query(plantsRef, where('isActive', '==', true));
+    // Simplified approach - get all plants and filter in JavaScript to avoid index requirements
+    console.log('Getting all plants and filtering client-side...');
+    
+    let filteredPlants = allPlantsSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(plant => plant.isActive === true);
+    
+    console.log('Active plants count:', filteredPlants.length);
     
     if (categoryId) {
-      q = query(q, where('categoryId', '==', categoryId));
+      filteredPlants = filteredPlants.filter(plant => plant.categoryId === categoryId);
+      console.log('After category filter:', filteredPlants.length);
     }
     
     if (featured) {
-      q = query(q, where('featured', '==', true));
+      filteredPlants = filteredPlants.filter(plant => plant.featured === true);
+      console.log('After featured filter:', filteredPlants.length);
     }
     
-    q = query(q, orderBy('createdAt', 'desc'));
+    // Sort by creation date (newest first)
+    filteredPlants.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
     
-    console.log('Executing filtered query...');
-    const snapshot = await getDocs(q);
-    console.log('Filtered plants count:', snapshot.docs.length);
-    
-    const plants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log('Final plants result:', plants);
-    
-    return plants;
+    console.log('Final plants result:', filteredPlants);
+    return filteredPlants;
   } catch (error) {
     console.error('Error fetching plants:', error);
     console.error('Error details:', {
