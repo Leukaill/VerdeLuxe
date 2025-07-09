@@ -199,13 +199,34 @@ export const getPlants = async (categoryId?: string, featured?: boolean) => {
       return dateB.getTime() - dateA.getTime();
     });
     
-    // For now, return plants without fetching photos to avoid loading issues
-    // Photos can be loaded separately when needed
-    const plantsWithPhotos = filteredPlants.map(plant => ({
-      ...plant,
-      imageUrls: plant.imageUrls || [], // Keep existing imageUrls if present
-      photos: [] // Will be loaded separately when needed
-    }));
+    // Fetch PostgreSQL photos for each plant and combine with Firestore imageUrls
+    const plantsWithPhotos = await Promise.all(
+      filteredPlants.map(async (plant) => {
+        try {
+          const postgresPhotos = await getPlantPhotos(plant.id);
+          const postgresImageUrls = postgresPhotos.map(photo => photo.url);
+          
+          // Combine Firestore imageUrls with PostgreSQL photo URLs
+          const allImageUrls = [
+            ...(plant.imageUrls || []),
+            ...postgresImageUrls
+          ];
+          
+          return {
+            ...plant,
+            imageUrls: allImageUrls,
+            photos: postgresPhotos
+          };
+        } catch (error) {
+          console.error(`Error fetching photos for plant ${plant.id}:`, error);
+          return {
+            ...plant,
+            imageUrls: plant.imageUrls || [],
+            photos: []
+          };
+        }
+      })
+    );
     
     console.log('Final plants result with photos:', plantsWithPhotos);
     return plantsWithPhotos;

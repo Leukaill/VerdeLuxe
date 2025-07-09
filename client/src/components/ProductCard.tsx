@@ -95,6 +95,14 @@ const ProductCard = ({ plant }: ProductCardProps) => {
     }
   };
 
+  // Get the first available image (either from Firestore or PostgreSQL)
+  const getPlantImage = () => {
+    if (plant.imageUrls && plant.imageUrls.length > 0) {
+      return plant.imageUrls[0];
+    }
+    return '/placeholder-plant.jpg'; // Fallback image
+  };
+
   return (
     <Link href={`/product/${plant.id}`}>
       <motion.div
@@ -103,7 +111,7 @@ const ProductCard = ({ plant }: ProductCardProps) => {
       >
         <div className="relative mb-4">
           <img
-            src={plant.imageUrls[0] || '/placeholder-plant.jpg'}
+            src={getPlantImage()}
             alt={plant.name}
             className="w-full h-64 object-cover rounded-xl group-hover:scale-105 transition-transform"
           />
