@@ -96,9 +96,20 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
   };
 
   const onFormSubmit = async (data: PlantForm) => {
+    console.log('Form submission started with data:', data);
     setIsSubmitting(true);
     
     try {
+      // Validate required fields
+      if (!data.categoryId) {
+        toast({
+          title: "Error",
+          description: "Please select a category",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Upload images
       const uploadedImageUrls = [];
       
@@ -117,6 +128,7 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
         isActive: true,
       };
 
+      console.log('Creating plant with data:', plantData);
       await createPlant(plantData);
       
       toast({
@@ -218,22 +230,32 @@ const PlantFormComponent = ({ onClose, onSubmit, categories, plant }: PlantFormP
                     <Label htmlFor="categoryId">Category</Label>
                     <Select 
                       value={selectedCategory} 
-                      onValueChange={(value) => setValue('categoryId', value)}
+                      onValueChange={(value) => {
+                        console.log('Category selected:', value);
+                        setValue('categoryId', value, { shouldValidate: true });
+                      }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={errors.categoryId ? 'border-red-500' : ''}>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
+                        {categories.length === 0 ? (
+                          <div className="p-2 text-gray-500">No categories available. Please seed the database first.</div>
+                        ) : (
+                          categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     {errors.categoryId && (
                       <p className="text-red-500 text-sm mt-1">{errors.categoryId.message}</p>
                     )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Categories loaded: {categories.length}
+                    </p>
                   </div>
 
                   <div className="flex items-center space-x-2">

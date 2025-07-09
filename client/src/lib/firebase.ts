@@ -278,7 +278,7 @@ export const onAuthStateChange = (callback: (user: User | null) => void) => {
 // Admin credentials collection in Firestore
 export const createAdminCredentials = async (email: string, password: string) => {
   try {
-    const credentialsRef = collection(db, 'admin_credentials');
+    const credentialsRef = collection(db, 'adminCredentials');
     
     // Check if admin already exists
     const q = query(credentialsRef, where('email', '==', email));
@@ -306,7 +306,7 @@ export const createAdminCredentials = async (email: string, password: string) =>
 
 export const verifyAdminCredentials = async (email: string, password: string) => {
   try {
-    const credentialsRef = collection(db, 'admin_credentials');
+    const credentialsRef = collection(db, 'adminCredentials');
     const q = query(
       credentialsRef, 
       where('email', '==', email),
@@ -333,7 +333,7 @@ export const verifyAdminCredentials = async (email: string, password: string) =>
 
 export const checkAdminExists = async () => {
   try {
-    const credentialsRef = collection(db, 'admin_credentials');
+    const credentialsRef = collection(db, 'adminCredentials');
     const q = query(credentialsRef, where('isActive', '==', true));
     const snapshot = await getDocs(q);
     
@@ -346,7 +346,7 @@ export const checkAdminExists = async () => {
 
 export const getAllAdminCredentials = async () => {
   try {
-    const credentialsRef = collection(db, 'admin_credentials');
+    const credentialsRef = collection(db, 'adminCredentials');
     const q = query(credentialsRef, where('isActive', '==', true), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
     
@@ -362,7 +362,7 @@ export const getAllAdminCredentials = async () => {
 
 export const deleteAdminCredentials = async (adminId: string) => {
   try {
-    const adminRef = doc(db, 'admin_credentials', adminId);
+    const adminRef = doc(db, 'adminCredentials', adminId);
     await updateDoc(adminRef, { isActive: false });
     console.log('Admin credentials deactivated');
     return true;
