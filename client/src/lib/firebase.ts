@@ -3,17 +3,29 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Placeholder config - will be updated when you provide new Firebase project details
 const firebaseConfig = {
-  apiKey: "your-new-api-key",
-  authDomain: "your-new-project.firebaseapp.com",
-  projectId: "your-new-project-id",
-  storageBucket: "your-new-project.firebasestorage.app",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyCcNFwX5pGlz2nRJXYlbc3_Pz4R0k6s8Xs",
+  authDomain: "mvp-db-21c9b.firebaseapp.com",
+  projectId: "mvp-db-21c9b",
+  storageBucket: "mvp-db-21c9b.firebasestorage.app",
+  messagingSenderId: "198610566372",
+  appId: "1:198610566372:web:df58c6fa2207facdd400f1",
+  measurementId: "G-JWHP8XDN85"
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only once
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+} catch (error: any) {
+  // If app already exists, get the existing one
+  if (error.code === 'app/duplicate-app') {
+    app = initializeApp(firebaseConfig, 'verde-luxe-app');
+  } else {
+    throw error;
+  }
+}
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
