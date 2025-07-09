@@ -55,19 +55,11 @@ const Navbar = () => {
   const handleLogoMouseDown = () => {
     setIsPressed(true);
     pressTimer.current = setTimeout(() => {
-      if (user) {
-        setIsAdminModalOpen(true);
-        toast({
-          title: "Admin Access",
-          description: "Opening admin authentication",
-        });
-      } else {
-        toast({
-          title: "Access Denied",
-          description: "Please sign in first",
-          variant: "destructive"
-        });
-      }
+      setIsAdminModalOpen(true);
+      toast({
+        title: "Admin Access",
+        description: "Opening admin authentication",
+      });
     }, 3000); // 3 seconds
   };
 

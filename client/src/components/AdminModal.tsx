@@ -4,11 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, UserPlus } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -16,7 +13,6 @@ interface AdminModalProps {
 }
 
 const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [adminPassword, setAdminPassword] = useState('');
