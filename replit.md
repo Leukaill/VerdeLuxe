@@ -109,6 +109,7 @@ Verde Luxe is a premium e-commerce platform for luxury plants featuring 3D visua
 
 ## Changelog
 - June 19, 2025. Initial setup
+- July 9, 2025. Enhanced hero section with orbital slideshow featuring 3D-like transitions, floating elements, and dynamic content
 
 ## User Preferences
 
