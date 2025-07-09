@@ -6,88 +6,25 @@ import { users, plants, categories, orders, orderItems, wishlistItems, reviews, 
 import { eq, desc, sql, and, ne } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Admin authentication middleware - simplified for demo
+  // Admin authentication middleware - now checks client session
   const verifyAdmin = async (req: any, res: any, next: any) => {
     try {
-      // For this demo, we'll accept any request to admin endpoints
-      // In production, you'd verify Firebase token here
-      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
-      if (!adminUsers.length) {
-        return res.status(403).json({ error: 'No admin users found' });
+      // Check if client has valid admin session
+      const adminAuth = req.headers['x-admin-auth'];
+      if (!adminAuth) {
+        return res.status(401).json({ error: 'Admin authentication required' });
       }
 
-      req.user = adminUsers[0];
+      // In a real implementation, you would verify the admin token here
+      // For now, we trust the client-side admin authentication
       next();
     } catch (error) {
       res.status(401).json({ error: 'Authentication failed' });
     }
   };
 
-  // Firebase-based admin endpoints
-  
-  // Check if Firebase admin exists
-  app.get("/api/admin/firebase-check-exists", async (req, res) => {
-    try {
-      // Check Firebase for admin users with isAdmin flag
-      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
-      res.json({ hasAdmin: adminUsers.length > 0 });
-    } catch (error) {
-      console.error('Check Firebase admin exists error:', error);
-      res.status(500).json({ error: 'Failed to check admin status' });
-    }
-  });
-
-  // Create Firebase admin user
-  app.post("/api/admin/firebase-create", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      // Check if admin already exists
-      const existingAdmin = await db.select().from(users).where(eq(users.isAdmin, true));
-      if (existingAdmin.length > 0) {
-        return res.status(400).json({ error: 'Admin already exists' });
-      }
-
-      // Create admin user in Firebase users table
-      const newAdmin = await db.insert(users).values({
-        firebaseUid: `admin-${Date.now()}`,
-        email,
-        displayName: 'Admin User',
-        isAdmin: true,
-      }).returning();
-
-      res.json({ success: true, message: 'Admin account created successfully', admin: newAdmin[0] });
-    } catch (error) {
-      console.error('Create Firebase admin error:', error);
-      res.status(500).json({ error: 'Failed to create admin account' });
-    }
-  });
-
-  // Firebase admin login
-  app.post("/api/admin/firebase-login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      // Find admin user by email
-      const admin = await db.select().from(users).where(
-        and(
-          eq(users.email, email),
-          eq(users.isAdmin, true)
-        )
-      );
-
-      if (!admin.length) {
-        return res.status(401).json({ error: 'Invalid admin credentials' });
-      }
-
-      // For now, simple password check (in production, use proper Firebase auth)
-      // We'll accept any password since this is just for demo
-      res.json({ success: true, admin: admin[0] });
-    } catch (error) {
-      console.error('Firebase admin login error:', error);
-      res.status(500).json({ error: 'Authentication failed' });
-    }
-  });
+  // Note: Admin authentication is now handled entirely through Firestore
+  // No server-side admin endpoints needed - all handled client-side with Firebase
 
   // Check admin status
   app.get("/api/admin/check-status", async (req, res) => {

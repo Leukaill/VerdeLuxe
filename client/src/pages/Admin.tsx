@@ -40,7 +40,7 @@ const Admin = () => {
   }, []);
 
   // Simple admin check - in a real app, this would be more robust
-  const isAdmin = user?.email === 'admin@verdeluxe.com' || user?.displayName?.includes('Admin');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   if (!user) {
     return (

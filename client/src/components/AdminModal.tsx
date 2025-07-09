@@ -31,9 +31,10 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
   const checkAdminExists = async () => {
     try {
-      const response = await fetch('/api/admin/firebase-check-exists');
-      const data = await response.json();
-      setHasAdmin(data.hasAdmin);
+      // Use the new Firestore-based admin check
+      const { checkAdminExists: firestoreCheckAdmin } = await import('../lib/firebase');
+      const adminExists = await firestoreCheckAdmin();
+      setHasAdmin(adminExists);
     } catch (error) {
       console.error('Error checking admin existence:', error);
       setHasAdmin(false);
@@ -52,22 +53,15 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/firebase-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: adminEmail,
-          password: adminPassword 
-        })
-      });
+      // Use the new Firestore-based admin verification
+      const { verifyAdminCredentials } = await import('../lib/firebase');
+      const adminData = await verifyAdminCredentials(adminEmail, adminPassword);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (adminData) {
         // Store admin session
         localStorage.setItem('adminAuthenticated', 'true');
         localStorage.setItem('adminEmail', adminEmail);
+        localStorage.setItem('adminId', adminData.id);
         toast({
           title: "Success",
           description: "Admin access granted"
@@ -75,14 +69,14 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         onClose();
         setLocation('/secure-admin-panel-verde-luxe');
       } else {
-        const error = await response.json();
         toast({
           title: "Error",
-          description: error.message || "Invalid admin credentials",
+          description: "Invalid admin credentials",
           variant: "destructive"
         });
       }
     } catch (error) {
+      console.error('Admin login error:', error);
       toast({
         title: "Error",
         description: "Authentication failed",
@@ -123,18 +117,11 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/firebase-create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: adminEmail,
-          password: newAdminPassword 
-        })
-      });
+      // Use the new Firestore-based admin creation
+      const { createAdminCredentials } = await import('../lib/firebase');
+      const adminDoc = await createAdminCredentials(adminEmail, newAdminPassword);
 
-      if (response.ok) {
+      if (adminDoc) {
         toast({
           title: "Success",
           description: "Admin account created successfully"
@@ -144,20 +131,15 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         // Auto-login after creation
         localStorage.setItem('adminAuthenticated', 'true');
         localStorage.setItem('adminEmail', adminEmail);
+        localStorage.setItem('adminId', adminDoc.id);
         onClose();
         setLocation('/secure-admin-panel-verde-luxe');
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Error",
-          description: error.message || "Failed to create admin account",
-          variant: "destructive"
-        });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Create admin error:', error);
       toast({
         title: "Error",
-        description: "Failed to create admin account",
+        description: error.message || "Failed to create admin account",
         variant: "destructive"
       });
     } finally {

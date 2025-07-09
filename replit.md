@@ -118,6 +118,7 @@ Verde Luxe is a premium e-commerce platform for luxury plants featuring 3D visua
 - July 9, 2025. **Standalone Admin System**: Implemented independent admin authentication that doesn't require regular user login - admin creation and login work separately from Firebase user auth
 - July 9, 2025. Successfully migrated project from Replit Agent to Replit environment with PostgreSQL database setup, seeded sample data including admin user, categories, plants, and site content
 - July 9, 2025. **Firebase Admin System**: Migrated admin authentication from PostgreSQL admin_credentials table to Firebase users table with isAdmin flag. Admin system now uses Firebase users for storage while maintaining independent authentication flow
+- July 9, 2025. **Firestore-Based Admin Credentials**: Completely migrated admin authentication to Firestore collection 'admin_credentials'. Removed all hardcoded admin credentials from PostgreSQL and server-side routes. Admin creation, verification, and management now handled entirely through Firestore with client-side Firebase integration
 
 ## User Preferences
 

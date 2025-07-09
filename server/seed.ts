@@ -3,15 +3,7 @@ import { users, categories, plants, siteContent, newsletterSubscribers } from ".
 
 export async function seedDatabase() {
   try {
-    // Create admin user
-    const [adminUser] = await db.insert(users).values({
-      firebaseUid: 'admin-verde-luxe-2025',
-      email: 'admin@verdeluxe.com',
-      displayName: 'Verde Luxe Admin',
-      isAdmin: true
-    }).onConflictDoNothing().returning();
-
-    console.log('Admin user created:', adminUser);
+    // Admin users will be managed through Firestore, not seeded
 
     // Create categories
     const categoryData = [

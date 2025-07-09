@@ -97,8 +97,6 @@ export const createUserDocument = async (user: User, displayName?: string) => {
       createdAt: new Date().toISOString(),
     });
   }
-  
-  return userSnap.data();
 };
 
 // Categories functions
@@ -273,4 +271,103 @@ export const uploadFile = async (file: File, path: string) => {
 // Auth state observer
 export const onAuthStateChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
+};
+
+// =============== FIRESTORE-BASED ADMIN CREDENTIAL SYSTEM ===============
+
+// Admin credentials collection in Firestore
+export const createAdminCredentials = async (email: string, password: string) => {
+  try {
+    const credentialsRef = collection(db, 'admin_credentials');
+    
+    // Check if admin already exists
+    const q = query(credentialsRef, where('email', '==', email));
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      throw new Error('Admin credentials already exist');
+    }
+    
+    // Create new admin credentials
+    const docRef = await addDoc(credentialsRef, {
+      email,
+      password, // In production, this should be hashed
+      createdAt: new Date().toISOString(),
+      isActive: true,
+    });
+    
+    console.log('Admin credentials created with ID:', docRef.id);
+    return docRef;
+  } catch (error) {
+    console.error('Error creating admin credentials:', error);
+    throw error;
+  }
+};
+
+export const verifyAdminCredentials = async (email: string, password: string) => {
+  try {
+    const credentialsRef = collection(db, 'admin_credentials');
+    const q = query(
+      credentialsRef, 
+      where('email', '==', email),
+      where('password', '==', password),
+      where('isActive', '==', true)
+    );
+    
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      return null;
+    }
+    
+    const adminDoc = snapshot.docs[0];
+    return {
+      id: adminDoc.id,
+      ...adminDoc.data()
+    };
+  } catch (error) {
+    console.error('Error verifying admin credentials:', error);
+    throw error;
+  }
+};
+
+export const checkAdminExists = async () => {
+  try {
+    const credentialsRef = collection(db, 'admin_credentials');
+    const q = query(credentialsRef, where('isActive', '==', true));
+    const snapshot = await getDocs(q);
+    
+    return !snapshot.empty;
+  } catch (error) {
+    console.error('Error checking admin existence:', error);
+    return false;
+  }
+};
+
+export const getAllAdminCredentials = async () => {
+  try {
+    const credentialsRef = collection(db, 'admin_credentials');
+    const q = query(credentialsRef, where('isActive', '==', true), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error getting admin credentials:', error);
+    return [];
+  }
+};
+
+export const deleteAdminCredentials = async (adminId: string) => {
+  try {
+    const adminRef = doc(db, 'admin_credentials', adminId);
+    await updateDoc(adminRef, { isActive: false });
+    console.log('Admin credentials deactivated');
+    return true;
+  } catch (error) {
+    console.error('Error deleting admin credentials:', error);
+    throw error;
+  }
 };
