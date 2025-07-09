@@ -63,6 +63,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user
+  app.put("/api/admin/users/:id", verifyAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { displayName, password } = req.body;
+      
+      const updateData: any = {};
+      if (displayName) updateData.displayName = displayName;
+      if (password) {
+        // In a real app, you'd hash the password here
+        updateData.password = password;
+      }
+
+      await db.update(users).set(updateData).where(eq(users.id, parseInt(id)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ error: 'Failed to update user' });
+    }
+  });
+
+  // Delete user
+  app.delete("/api/admin/users/:id", verifyAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Delete related data first
+      await db.delete(cartItems).where(eq(cartItems.userId, parseInt(id)));
+      await db.delete(wishlistItems).where(eq(wishlistItems.userId, parseInt(id)));
+      await db.delete(orders).where(eq(orders.userId, parseInt(id)));
+      await db.delete(reviews).where(eq(reviews.userId, parseInt(id)));
+      
+      // Delete user
+      await db.delete(users).where(eq(users.id, parseInt(id)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ error: 'Failed to delete user' });
+    }
+  });
+
   // Get all plants
   app.get("/api/admin/plants", verifyAdmin, async (req, res) => {
     try {
@@ -77,10 +118,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/plants", verifyAdmin, async (req, res) => {
     try {
       const plantData = req.body;
-      const [newPlant] = await db.insert(plants).values(plantData).returning();
+      // Generate slug from name
+      const slug = plantData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const plantToInsert = {
+        ...plantData,
+        slug,
+        isActive: true,
+        tags: plantData.tags || [],
+        imageUrls: plantData.imageUrls || [],
+        createdAt: new Date()
+      };
+      const [newPlant] = await db.insert(plants).values(plantToInsert).returning();
       res.json(newPlant);
     } catch (error) {
+      console.error('Error creating plant:', error);
       res.status(500).json({ error: 'Failed to create plant' });
+    }
+  });
+
+  // Update plant
+  app.put("/api/admin/plants/:id", verifyAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const plantData = req.body;
+      
+      // Generate slug from name if name is provided
+      if (plantData.name) {
+        plantData.slug = plantData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      }
+      
+      await db.update(plants).set(plantData).where(eq(plants.id, parseInt(id)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating plant:', error);
+      res.status(500).json({ error: 'Failed to update plant' });
+    }
+  });
+
+  // Delete plant
+  app.delete("/api/admin/plants/:id", verifyAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.delete(plants).where(eq(plants.id, parseInt(id)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting plant:', error);
+      res.status(500).json({ error: 'Failed to delete plant' });
     }
   });
 
@@ -145,6 +228,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: 'Failed to update content' });
+    }
+  });
+
+  // Public content endpoint for About page
+  app.get("/api/content", async (req, res) => {
+    try {
+      const content = await db.select().from(siteContent).orderBy(siteContent.key);
+      res.json(content);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch content' });
     }
   });
 

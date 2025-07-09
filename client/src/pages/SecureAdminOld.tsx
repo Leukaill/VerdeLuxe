@@ -72,20 +72,6 @@ const SecureAdmin = () => {
   const [editingPlant, setEditingPlant] = useState<Plant | null>(null);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [userForm, setUserForm] = useState({ displayName: '', password: '' });
-  const [plantForm, setPlantForm] = useState({
-    name: '',
-    description: '',
-    price: 0,
-    stock: 0,
-    featured: false,
-    categoryId: '',
-    careInstructions: '',
-    lightRequirement: '',
-    wateringFrequency: '',
-    difficultyLevel: '',
-    tags: [] as string[],
-    imageUrls: [] as string[]
-  });
 
   // Check if admin is authenticated
   useEffect(() => {
@@ -127,9 +113,9 @@ const SecureAdmin = () => {
   };
 
   const handleAdminAuth = async () => {
+    // Auto authenticate since user came from admin creation
     try {
       setIsAuthenticated(true);
-      localStorage.setItem('adminAuthenticated', 'true');
       loadAdminData();
       toast({
         title: "Success",
@@ -221,7 +207,6 @@ const SecureAdmin = () => {
         await loadAdminData();
         setShowPlantForm(false);
         setEditingPlant(null);
-        resetPlantForm();
         toast({
           title: "Success",
           description: "Plant created successfully"
@@ -252,7 +237,6 @@ const SecureAdmin = () => {
         await loadAdminData();
         setShowPlantForm(false);
         setEditingPlant(null);
-        resetPlantForm();
         toast({
           title: "Success",
           description: "Plant updated successfully"
@@ -268,8 +252,6 @@ const SecureAdmin = () => {
   };
 
   const deletePlant = async (plantId: string) => {
-    if (!confirm('Are you sure you want to delete this plant?')) return;
-    
     try {
       const adminAuth = localStorage.getItem('adminAuthenticated');
       const response = await fetch(`/api/admin/plants/${plantId}`, {
@@ -328,8 +310,6 @@ const SecureAdmin = () => {
   };
 
   const deleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-    
     try {
       const adminAuth = localStorage.getItem('adminAuthenticated');
       const response = await fetch(`/api/admin/users/${userId}`, {
@@ -356,31 +336,6 @@ const SecureAdmin = () => {
     }
   };
 
-  const resetPlantForm = () => {
-    setPlantForm({
-      name: '',
-      description: '',
-      price: 0,
-      stock: 0,
-      featured: false,
-      categoryId: '',
-      careInstructions: '',
-      lightRequirement: '',
-      wateringFrequency: '',
-      difficultyLevel: '',
-      tags: [],
-      imageUrls: []
-    });
-  };
-
-  const handlePlantFormSubmit = async () => {
-    if (editingPlant) {
-      await updatePlant(editingPlant.id, plantForm);
-    } else {
-      await createPlant(plantForm);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('adminAuthenticated');
     localStorage.removeItem('adminEmail');
@@ -399,6 +354,8 @@ const SecureAdmin = () => {
       </div>
     );
   }
+
+
 
   if (!isAuthenticated) {
     return (
@@ -463,11 +420,7 @@ const SecureAdmin = () => {
                 <div className="space-y-4">
                   <Button 
                     className="flex items-center gap-2"
-                    onClick={() => {
-                      resetPlantForm();
-                      setEditingPlant(null);
-                      setShowPlantForm(true);
-                    }}
+                    onClick={() => setShowPlantForm(true)}
                   >
                     <Plus className="h-4 w-4" />
                     Add New Plant
@@ -489,20 +442,6 @@ const SecureAdmin = () => {
                             size="sm"
                             onClick={() => {
                               setEditingPlant(plant);
-                              setPlantForm({
-                                name: plant.name,
-                                description: plant.description,
-                                price: plant.price,
-                                stock: plant.stock,
-                                featured: plant.featured,
-                                categoryId: plant.categoryId,
-                                careInstructions: plant.careInstructions || '',
-                                lightRequirement: plant.lightRequirement || '',
-                                wateringFrequency: plant.wateringFrequency || '',
-                                difficultyLevel: plant.difficultyLevel || '',
-                                tags: plant.tags,
-                                imageUrls: plant.imageUrls
-                              });
                               setShowPlantForm(true);
                             }}
                           >
@@ -547,26 +486,9 @@ const SecureAdmin = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setEditingUser(adminUser);
-                            setUserForm({ displayName: adminUser.displayName, password: '' });
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
                           onClick={() => toggleUserAdmin(adminUser.id, adminUser.isAdmin)}
                         >
                           {adminUser.isAdmin ? 'Remove Admin' : 'Make Admin'}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteUser(adminUser.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -613,7 +535,7 @@ const SecureAdmin = () => {
                   <FileText className="h-5 w-5" />
                   Site Content Management
                 </CardTitle>
-                <CardDescription>Edit About and Contact page content, including Vanessa Bagenzi's image</CardDescription>
+                <CardDescription>Edit About and Contact page content</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -626,46 +548,12 @@ const SecureAdmin = () => {
                             onChange={(e) => setEditingContent({...editingContent, title: e.target.value})}
                             placeholder="Title"
                           />
-                          <Textarea
-                            className="min-h-32"
+                          <textarea
+                            className="w-full min-h-32 p-2 border rounded"
                             value={editingContent.content || ''}
                             onChange={(e) => setEditingContent({...editingContent, content: e.target.value})}
                             placeholder="Content"
                           />
-                          
-                          {/* Special image upload for Vanessa Bagenzi */}
-                          {content.key === 'vanessa_bagenzi' && (
-                            <div className="space-y-2">
-                              <Label htmlFor="vanessa-image">Upload Vanessa's Image</Label>
-                              <div className="flex items-center gap-4">
-                                <Input
-                                  id="vanessa-image"
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      // Create a URL for the uploaded file
-                                      const imageUrl = URL.createObjectURL(file);
-                                      // Update content with new image URL
-                                      const updatedContent = editingContent.content?.replace(
-                                        /\*\*Image:\*\*\s*.+/,
-                                        `**Image:** ${imageUrl}`
-                                      ) || editingContent.content + `\n\n**Image:** ${imageUrl}`;
-                                      setEditingContent({...editingContent, content: updatedContent});
-                                    }
-                                  }}
-                                />
-                                <div className="text-sm text-gray-500">
-                                  Current: {editingContent.content?.match(/\*\*Image:\*\*\s*(.+)/)?.[1] || 'No image'}
-                                </div>
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                Upload an image for Vanessa Bagenzi's profile. The image URL will be added to the content automatically.
-                              </div>
-                            </div>
-                          )}
-                          
                           <div className="flex gap-2">
                             <Button onClick={() => updateSiteContent(editingContent)}>
                               Save
@@ -687,24 +575,11 @@ const SecureAdmin = () => {
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
-                          <p className="text-sm text-gray-600">{content.title}</p>
-                          <p className="text-xs text-gray-500 mt-2 line-clamp-3">{content.content}</p>
-                          
-                          {/* Show current image for Vanessa Bagenzi */}
-                          {content.key === 'vanessa_bagenzi' && content.content?.includes('**Image:**') && (
-                            <div className="mt-2">
-                              <div className="text-xs text-gray-400 mb-1">Current image:</div>
-                              <img 
-                                src={content.content.match(/\*\*Image:\*\*\s*(.+)/)?.[1] || ''} 
-                                alt="Vanessa Bagenzi"
-                                className="w-16 h-16 rounded-full object-cover border"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          )}
+                          {content.title && <h4 className="font-medium mb-2">{content.title}</h4>}
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{content.content}</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Last updated: {new Date(content.updatedAt).toLocaleDateString()}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -719,125 +594,31 @@ const SecureAdmin = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings className="h-5 w-5" />
-                  Settings
+                  Admin Settings
                 </CardTitle>
-                <CardDescription>System settings and configuration</CardDescription>
+                <CardDescription>System configuration and admin tools</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Settings panel coming soon...</p>
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg">
+                    <h3 className="font-semibold mb-2">Current Admin</h3>
+                    <p className="text-sm text-gray-600">{localStorage.getItem('adminEmail')}</p>
+                    <Badge className="mt-2">Active Admin</Badge>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h3 className="font-semibold mb-2">Statistics</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>Total Users: {users.length}</div>
+                      <div>Newsletter Subscribers: {newsletters.filter(s => s.subscribed).length}</div>
+                      <div>Active Plants: {plants.filter(p => p.isActive).length}</div>
+                      <div>Featured Plants: {plants.filter(p => p.featured).length}</div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Plant Form Modal */}
-        {showPlantForm && (
-          <Dialog open={showPlantForm} onOpenChange={setShowPlantForm}>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingPlant ? 'Edit Plant' : 'Add New Plant'}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Plant Name</Label>
-                  <Input
-                    id="name"
-                    value={plantForm.name}
-                    onChange={(e) => setPlantForm({...plantForm, name: e.target.value})}
-                    placeholder="Enter plant name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={plantForm.description}
-                    onChange={(e) => setPlantForm({...plantForm, description: e.target.value})}
-                    placeholder="Enter plant description"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="price">Price ($)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={plantForm.price}
-                      onChange={(e) => setPlantForm({...plantForm, price: Number(e.target.value)})}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="stock">Stock</Label>
-                    <Input
-                      id="stock"
-                      type="number"
-                      value={plantForm.stock}
-                      onChange={(e) => setPlantForm({...plantForm, stock: Number(e.target.value)})}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="featured"
-                    checked={plantForm.featured}
-                    onCheckedChange={(checked) => setPlantForm({...plantForm, featured: checked})}
-                  />
-                  <Label htmlFor="featured">Featured Plant</Label>
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handlePlantFormSubmit}>
-                    {editingPlant ? 'Update Plant' : 'Create Plant'}
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowPlantForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {/* User Edit Modal */}
-        {editingUser && (
-          <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit User</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input
-                    id="displayName"
-                    value={userForm.displayName}
-                    onChange={(e) => setUserForm({...userForm, displayName: e.target.value})}
-                    placeholder="Enter display name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">New Password (optional)</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={userForm.password}
-                    onChange={(e) => setUserForm({...userForm, password: e.target.value})}
-                    placeholder="Enter new password"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={() => updateUser(editingUser.id, userForm)}>
-                    Update User
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditingUser(null)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
       </div>
     </div>
   );

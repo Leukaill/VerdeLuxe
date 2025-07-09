@@ -58,6 +58,25 @@ Facebook: Verde Luxe Plants
 Twitter: @verdeluxeplants
 
 For plant care emergencies or urgent questions, our expert botanists are available 24/7 via our support email.`
+      },
+      {
+        key: 'vanessa_bagenzi',
+        title: 'Meet Vanessa Bagenzi',
+        content: `It all started with a young lady named Vanessa Bagenzi, who discovered her love for plants during her computer science studies. While debugging code late into the night, she found solace in the small succulent on her desk—a gift from her grandmother.
+
+As her plant collection grew, so did her programming skills. Vanessa realized that many people struggled to find the right plants for their homes and lacked proper care guidance. She envisioned a digital platform that could bridge this gap, combining her technical expertise with her botanical passion.
+
+After graduating, Vanessa spent months researching plant care, interviewing botanists, and designing user-friendly interfaces. She wanted to create more than just an online store—she aimed to build a community where plant lovers could thrive together.
+
+Today, Verde Luxe reflects Vanessa's vision: a place where technology meets nature, where every plant finds the right home, and where both beginners and experts can discover the joy of plant parenthood.
+
+**Vanessa's Expertise:**
+- Computer Science Degree with focus on User Experience
+- Certified Horticulturist and Plant Care Specialist  
+- 5+ years experience in e-commerce and digital platform development
+- Passionate advocate for sustainable gardening practices
+
+**Image:** /images/vanessa-bagenzi.jpg`
       }
     ];
 

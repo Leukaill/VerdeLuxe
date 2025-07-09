@@ -1,8 +1,59 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Heart, Code, Users, Award, Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
+interface SiteContent {
+  id: string;
+  key: string;
+  title?: string;
+  content?: string;
+  updatedAt: string;
+}
+
 const About = () => {
+  const [aboutContent, setAboutContent] = useState<SiteContent | null>(null);
+  const [vanessaContent, setVanessaContent] = useState<SiteContent | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const response = await fetch('/api/content');
+        if (response.ok) {
+          const content = await response.json();
+          const aboutData = content.find((c: SiteContent) => c.key === 'about_content');
+          const vanessaData = content.find((c: SiteContent) => c.key === 'vanessa_bagenzi');
+          setAboutContent(aboutData);
+          setVanessaContent(vanessaData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContent();
+  }, []);
+
+  const extractImageFromContent = (content: string) => {
+    const imageMatch = content.match(/\*\*Image:\*\*\s*(.+)/);
+    return imageMatch ? imageMatch[1].trim() : null;
+  };
+
+  const getContentWithoutImage = (content: string) => {
+    return content.replace(/\*\*Image:\*\*\s*.+/, '').trim();
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-20">
       {/* Hero Section */}
@@ -35,47 +86,83 @@ const About = () => {
           >
             <div className="space-y-6">
               <h2 className="text-4xl font-bold text-forest-800">
-                Meet Vanessa
+                {vanessaContent?.title || 'Meet Vanessa Bagenzi'}
               </h2>
               <div className="prose prose-lg text-forest-600">
-                <p>
-                  It all started with a young lady named Vanessa, who discovered her love for plants during her computer science studies. 
-                  While debugging code late into the night, she found solace in the small succulent on her desk—a gift from her grandmother.
-                </p>
-                <p>
-                  As her plant collection grew, so did her programming skills. Vanessa realized that many people struggled to find the right plants 
-                  for their homes and lacked proper care guidance. She envisioned a digital platform that could bridge this gap, combining her 
-                  technical expertise with her botanical passion.
-                </p>
-                <p>
-                  After graduating, Vanessa spent months researching plant care, interviewing botanists, and designing user-friendly interfaces. 
-                  She wanted to create more than just an online store—she aimed to build a community where plant lovers could thrive together.
-                </p>
-                <p>
-                  Today, PlantShop reflects Vanessa's vision: a place where technology meets nature, where every plant finds the right home, 
-                  and where both beginners and experts can discover the joy of plant parenthood.
-                </p>
+                {vanessaContent?.content ? (
+                  getContentWithoutImage(vanessaContent.content).split('\n\n').map((paragraph, index) => {
+                    if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
+                      return (
+                        <h3 key={index} className="text-xl font-bold text-forest-800 mt-6 mb-3">
+                          {paragraph.replace(/\*\*/g, '')}
+                        </h3>
+                      );
+                    }
+                    if (paragraph.startsWith('- ')) {
+                      return (
+                        <ul key={index} className="list-disc list-inside space-y-1">
+                          {paragraph.split('\n').map((item, itemIndex) => (
+                            <li key={itemIndex}>{item.replace('- ', '')}</li>
+                          ))}
+                        </ul>
+                      );
+                    }
+                    return <p key={index}>{paragraph}</p>;
+                  })
+                ) : (
+                  <div className="space-y-4">
+                    <p>Loading Vanessa's story...</p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="relative">
               <div className="aspect-square rounded-2xl glass p-8 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="w-24 h-24 bg-gradient-to-br from-forest-500 to-sage-500 rounded-full mx-auto flex items-center justify-center">
-                    <Heart className="w-12 h-12 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-forest-800">Vanessa Rodriguez</h3>
-                  <p className="text-forest-600">Founder & Plant Enthusiast</p>
-                  <div className="flex justify-center space-x-4 pt-4">
-                    <div className="flex items-center space-x-2">
-                      <Code className="w-5 h-5 text-forest-500" />
-                      <span className="text-sm text-forest-600">Developer</span>
+                {vanessaContent?.content && extractImageFromContent(vanessaContent.content) ? (
+                  <div className="text-center space-y-4">
+                    <div className="w-32 h-32 rounded-full overflow-hidden mx-auto border-4 border-white shadow-lg">
+                      <img 
+                        src={extractImageFromContent(vanessaContent.content) || '/images/placeholder-avatar.jpg'} 
+                        alt="Vanessa Bagenzi"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/images/placeholder-avatar.jpg';
+                        }}
+                      />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Leaf className="w-5 h-5 text-sage-500" />
-                      <span className="text-sm text-forest-600">Botanist</span>
+                    <h3 className="text-2xl font-bold text-forest-800">Vanessa Bagenzi</h3>
+                    <p className="text-forest-600">Founder & Plant Enthusiast</p>
+                    <div className="flex justify-center space-x-4 pt-4">
+                      <div className="flex items-center space-x-2">
+                        <Code className="w-5 h-5 text-forest-500" />
+                        <span className="text-sm text-forest-600">Developer</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Leaf className="w-5 h-5 text-sage-500" />
+                        <span className="text-sm text-forest-600">Botanist</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="w-24 h-24 bg-gradient-to-br from-forest-500 to-sage-500 rounded-full mx-auto flex items-center justify-center">
+                      <Heart className="w-12 h-12 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-forest-800">Vanessa Bagenzi</h3>
+                    <p className="text-forest-600">Founder & Plant Enthusiast</p>
+                    <div className="flex justify-center space-x-4 pt-4">
+                      <div className="flex items-center space-x-2">
+                        <Code className="w-5 h-5 text-forest-500" />
+                        <span className="text-sm text-forest-600">Developer</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Leaf className="w-5 h-5 text-sage-500" />
+                        <span className="text-sm text-forest-600">Botanist</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
