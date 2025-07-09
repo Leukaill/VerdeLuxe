@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { users, plants, categories, orders, orderItems, wishlistItems, reviews, newsletterSubscribers, siteContent, adminCredentials } from "../shared/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and, ne } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Admin authentication middleware
@@ -212,9 +212,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get('/api/admin/check-exists', async (req, res) => {
     try {
-      // Check if any admin exists in the system
-      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
-      const hasAdmin = adminUsers.length > 0;
+      // Check if any real Firebase admin exists (not seeded admin)
+      const realAdminUsers = await db.select().from(users)
+        .where(and(
+          eq(users.isAdmin, true),
+          ne(users.firebaseUid, 'admin-verde-luxe-2025') // Exclude seeded admin
+        ));
+      const hasAdmin = realAdminUsers.length > 0;
       res.json({ hasAdmin });
     } catch (error) {
       console.error('Error checking admin existence:', error);
@@ -226,9 +230,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, email, password } = req.body;
 
-      // Check if admin already exists
-      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
-      if (adminUsers.length > 0) {
+      // Check if real admin already exists (not seeded admin)
+      const realAdminUsers = await db.select().from(users)
+        .where(and(
+          eq(users.isAdmin, true),
+          ne(users.firebaseUid, 'admin-verde-luxe-2025') // Exclude seeded admin
+        ));
+      if (realAdminUsers.length > 0) {
         return res.status(400).json({ message: 'Admin account already exists' });
       }
 
