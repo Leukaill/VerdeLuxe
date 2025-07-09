@@ -62,6 +62,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Note: Admin authentication is now handled entirely through Firestore
   // No server-side admin endpoints needed - all handled client-side with Firebase
 
+  // Check database connection status
+  app.get("/api/database/status", async (req, res) => {
+    try {
+      // Simple query to test database connectivity
+      const testQuery = await db.select().from(plants).limit(1);
+      res.json({ 
+        connected: true,
+        message: 'Database connection successful',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.json({ 
+        connected: false,
+        message: 'Database connection failed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Check admin status
   app.get("/api/admin/check-status", async (req, res) => {
     try {

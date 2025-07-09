@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Package, ShoppingCart, Users, BarChart3, Database } from 'lucide-react';
+import { Plus, Package, ShoppingCart, Users, BarChart3, Database, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,41 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [showPlantForm, setShowPlantForm] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [dbStatus, setDbStatus] = useState({ connected: false, message: '', timestamp: '', loading: true });
+  const [firestoreStatus, setFirestoreStatus] = useState({ connected: false, message: '', loading: true });
+
+  const checkDatabaseStatus = async () => {
+    try {
+      const response = await fetch('/api/database/status');
+      const data = await response.json();
+      setDbStatus({ ...data, loading: false });
+    } catch (error) {
+      setDbStatus({ 
+        connected: false, 
+        message: 'Failed to check database connection', 
+        timestamp: new Date().toISOString(),
+        loading: false 
+      });
+    }
+  };
+
+  const checkFirestoreStatus = async () => {
+    try {
+      // Test Firestore connection by trying to fetch categories
+      const categories = await getCategories();
+      setFirestoreStatus({ 
+        connected: true, 
+        message: 'Firestore connection successful',
+        loading: false 
+      });
+    } catch (error) {
+      setFirestoreStatus({ 
+        connected: false, 
+        message: 'Firestore connection failed', 
+        loading: false 
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,6 +76,8 @@ const Admin = () => {
     };
 
     fetchData();
+    checkDatabaseStatus();
+    checkFirestoreStatus();
   }, []);
 
   // Check if admin is authenticated via local storage (from AdminModal)
@@ -93,7 +130,7 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-5 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -161,6 +198,59 @@ const Admin = () => {
                     <p className="text-2xl font-bold text-forest-600">${totalRevenue.toFixed(2)}</p>
                   </div>
                   <BarChart3 className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <Card className="glass">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Database Status</p>
+                    <div className="space-y-1 mt-1">
+                      <div className="flex items-center gap-2">
+                        {dbStatus.loading ? (
+                          <RefreshCw className="h-3 w-3 animate-spin text-gray-500" />
+                        ) : dbStatus.connected ? (
+                          <Wifi className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <WifiOff className="h-3 w-3 text-red-500" />
+                        )}
+                        <span className={`text-xs font-medium ${dbStatus.connected ? 'text-green-600' : 'text-red-600'}`}>
+                          PostgreSQL: {dbStatus.loading ? 'Checking...' : dbStatus.connected ? 'Connected' : 'Disconnected'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {firestoreStatus.loading ? (
+                          <RefreshCw className="h-3 w-3 animate-spin text-gray-500" />
+                        ) : firestoreStatus.connected ? (
+                          <Wifi className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <WifiOff className="h-3 w-3 text-red-500" />
+                        )}
+                        <span className={`text-xs font-medium ${firestoreStatus.connected ? 'text-green-600' : 'text-red-600'}`}>
+                          Firestore: {firestoreStatus.loading ? 'Checking...' : firestoreStatus.connected ? 'Connected' : 'Disconnected'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      checkDatabaseStatus();
+                      checkFirestoreStatus();
+                    }}
+                    size="sm"
+                    variant="outline"
+                    className="p-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
